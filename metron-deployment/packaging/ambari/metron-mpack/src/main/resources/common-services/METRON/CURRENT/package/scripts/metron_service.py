@@ -93,7 +93,6 @@ def load_global_config(params):
 
     init_config()
 
-
 def init_kafka_topics(params, topics):
     Logger.info('Creating Kafka topics')
 
@@ -122,7 +121,7 @@ def init_kafka_topics(params, topics):
     Logger.info("Done creating Kafka topics")
 
 
-def init_kafka_acls(params, topics, group_suffix=''):
+def init_kafka_acls(params, topics, groups):
     Logger.info('Creating Kafka ACLs')
 
     acl_template = """{0}/kafka-acls.sh \
@@ -133,7 +132,7 @@ def init_kafka_acls(params, topics, group_suffix=''):
                                   --topic {3}"""
 
     for topic in topics:
-        Logger.info("Creating ACL for topic'{0}'".format(topic))
+        Logger.info("Creating ACL for topic '{0}'".format(topic))
         Execute(acl_template.format(params.kafka_bin_dir,
                                     params.zookeeper_quorum,
                                     params.metron_user,
@@ -145,14 +144,13 @@ def init_kafka_acls(params, topics, group_suffix=''):
                                   --authorizer-properties zookeeper.connect={1} \
                                   --add \
                                   --allow-principal User:{2} \
-                                  --group {3}{4}"""
+                                  --group {3}"""
 
-    for topic in topics:
-        Logger.info("Creating ACL for group'{0}'".format(topic))
+    for group in groups:
+        Logger.info("Creating ACL for group '{0}'".format(group))
         Execute(acl_template.format(params.kafka_bin_dir,
                                     params.zookeeper_quorum,
                                     params.metron_user,
-                                    topic,
-                                    group_suffix),
+                                    group),
                 user=params.kafka_user)
     Logger.info("Done creating Kafka ACLs")
