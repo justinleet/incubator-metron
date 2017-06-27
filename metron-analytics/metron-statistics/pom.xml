@@ -83,6 +83,9 @@
                                 </relocation>
                             </relocations>
                             <artifactSet>
+                                <includes>
+                                    <include>com.tdunning:t-digest</include>
+                                </includes>
                                 <excludes>
                                     <exclude>storm:storm-core:*</exclude>
                                     <exclude>storm:storm-lib:*</exclude>

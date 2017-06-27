@@ -226,9 +226,9 @@
                 <configuration>
                     <createDependencyReducedPom>true</createDependencyReducedPom>
                     <artifactSet>
-                        <excludes>
-                            <exclude>*slf4j*</exclude>
-                        </excludes>
+                        <includes>
+                            <include>com.google.guava:guava</include>
+                        </includes>
                     </artifactSet>
                 </configuration>
                 <executions>
