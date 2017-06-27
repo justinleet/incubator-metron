@@ -109,6 +109,7 @@
         <global_surefire_version>2.18</global_surefire_version>
         <global_commonslang3_version>3.3.2</global_commonslang3_version>
         <global_maven_version>[3.3.1,)</global_maven_version>
+        <argLine></argLine>
     </properties>
 
     <profiles>
