@@ -23,3 +23,4 @@ before_cache:
 cache:
   directories:
   - $HOME/.m2
+  - metron/metron-interface/metron-config/node_modules
