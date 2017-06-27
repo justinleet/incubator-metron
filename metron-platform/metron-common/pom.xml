@@ -414,6 +414,7 @@
                                 <includes>
                                     <include>com.google.guava:guava</include>
                                     <include>commons-beanutils:commons-beanutils</include>
+                                    <include>org.apache.common:commons-lang3</include>
                                 </includes>
                             </artifactSet>
                             <relocations>
@@ -422,10 +423,13 @@
                                     <shadedPattern>org.apache.metron.guava</shadedPattern>
                                 </relocation>
                                 <relocation>
+                                    <pattern>org.apache.commons.lang3</pattern>
+                                    <shadedPattern>org.apache.metron.commons.lang3</shadedPattern>
+                                </relocation>
+                                <relocation>
                                     <pattern>org.apache.commons.beanutils</pattern>
                                     <shadedPattern>org.apache.metron.beanutils</shadedPattern>
                                 </relocation>
-
                             </relocations>
                             <transformers>
                                 <transformer
