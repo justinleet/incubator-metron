@@ -21,6 +21,7 @@ package org.apache.metron.integration.components;
 import com.google.common.base.Function;
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import kafka.admin.AdminUtils;
 import kafka.api.FetchRequest;
@@ -190,8 +191,15 @@ public class KafkaComponent implements InMemoryComponent {
     shutdownProducers();
 
     if(kafkaServer != null) {
-      kafkaServer.shutdown();
-      kafkaServer.awaitShutdown();
+      try {
+        kafkaServer.shutdown();
+        kafkaServer.awaitShutdown();
+      }
+      catch(Throwable fnf) {
+        if(!fnf.getMessage().contains("Error writing to highwatermark file")) {
+          throw fnf;
+        }
+      }
     }
     if(zkClient != null) {
       // Delete data in ZK to avoid startup interference.
