@@ -139,6 +139,11 @@
             <version>${commons.config.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${global_commonslang3_version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.krakenapps</groupId>
             <artifactId>kraken-pcap</artifactId>
             <version>${global_pcap_version}</version>
@@ -410,6 +415,13 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
+                            <artifactSet>
+                                <includes>
+                                    <include>com.google.guava:guava</include>
+                                    <include>commons-beanutils:commons-beanutils</include>
+                                    <include>org.apache.common:commons-lang3</include>
+                                </includes>
+                            </artifactSet>
                             <relocations>
                                 <relocation>
                                     <pattern>com.google.common</pattern>
@@ -419,7 +431,6 @@
                                     <pattern>org.apache.commons.beanutils</pattern>
                                     <shadedPattern>org.apache.metron.beanutils</shadedPattern>
                                 </relocation>
-
                             </relocations>
                             <transformers>
                                 <transformer

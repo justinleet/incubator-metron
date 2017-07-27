@@ -31,3 +31,4 @@ cache:
   - $HOME/.npm-prefix
   - metron-interface/metron-config/node_modules
   - $HOME/.m2
+  - metron/metron-interface/metron-config/node_modules
