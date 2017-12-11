@@ -29,7 +29,11 @@
         <commons.config.version>1.10</commons.config.version>
     </properties>
     <dependencies>
-
+        <!--<dependency>-->
+            <!--<groupId>org.apache.metron</groupId>-->
+            <!--<artifactId>stellar-doc</artifactId>-->
+            <!--<version>${parent.version}</version>-->
+        <!--</dependency>-->
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-auth</artifactId>
@@ -368,4 +372,24 @@
             </resource>
         </resources>
     </build>
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.0.0</version>
+                <configuration>
+                    <!--<javadocVersion>1.5</javadocVersion>-->
+                    <doclet>org.apache.metron.stellar.doc.StellarDoclet</doclet>
+                    <docletArtifact>
+                        <groupId>org.apache.metron</groupId>
+                        <artifactId>stellar-doc</artifactId>
+                        <version>${project.parent.version}</version>
+                    </docletArtifact>
+                    <!--<additionalparam>-views</additionalparam>-->
+                    <useStandardDocletOptions>true</useStandardDocletOptions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </reporting>
 </project>
