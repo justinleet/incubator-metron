@@ -36,15 +36,34 @@
   register: ambari_server_setup
   failed_when: "(ambari_server_setup.stderr is defined and ambari_server_setup.stderr != '') or 'FATAL' in ambari_server_setup.stdout"
 
+
 - name: Copy MPack to Ambari Host
   copy:
     src: "{{ playbook_dir }}/../packaging/ambari/metron-mpack/target/metron_mpack-{{ ambari_mpack_version }}.tar.gz"
     dest: /tmp
 
-- name: Install MPack on Ambari Host
+#- pause:
+#    minutes: 15
+
+- name: Install Metron MPack on Ambari Host
   shell: ambari-server install-mpack --mpack=/tmp/metron_mpack-0.4.3.0.tar.gz
   args:
     creates: /var/lib/ambari-server/resources/mpacks/metron-ambari.mpack-{{ ambari_mpack_version }}/addon-services
+
+- name: Download Solr Mpack
+  get_url:
+    url: "http://s3.amazonaws.com/dev.hortonworks.com/HDP-SOLR/hdp-solr-ambari-mp/solr-service-mpack-2.2.9.tar.gz"
+    dest: "/tmp/solr-service-mpack-2.2.9.tar.gz"
+  when: install_solr | default(True)
+
+- name: Install Solr MPack on Ambari Host
+  shell: ambari-server install-mpack --mpack=/tmp/solr-service-mpack-2.2.9.tar.gz
+
+  args:
+    creates: /var/lib/ambari-server/resources/mpacks/solr-ambari-mpack-2.2.9/common-services
+  when: install_solr | default(True)
+#  tags:
+#    - solr
 
 - name: start ambari server
   service:

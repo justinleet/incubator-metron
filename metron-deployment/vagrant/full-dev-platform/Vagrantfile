@@ -17,7 +17,8 @@
 require 'getoptlong'
 
 ansibleTags=''
-ansibleSkipTags='sensors'
+#ansibleSkipTags='sensors'
+ansibleSkipTags='sensors,build'
 
 begin
    opts = GetoptLong.new(

@@ -79,9 +79,10 @@
   register: core_site_response
   when: hdfs_url is undefined
 
-- set_fact:
-    hdfs_url: "{{ (core_site_response.content | from_json)['items'][0].properties['fs.defaultFS'] }}"
-  when: hdfs_url is undefined
+# Possibly broken, and I don't know why.  When trying to run_ansible_role.sh sensor-stubs
+#- set_fact:
+#    hdfs_url: "{{ (core_site_response.content | from_json)['items'][0].properties['fs.defaultFS'] }}"
+#  when: hdfs_url is undefined
 
 #
 # kafka_broker_hosts
@@ -205,19 +206,20 @@
     metron_hosts: "{{ (metron_hosts_response.content | from_json).host_components | map(attribute='HostRoles.host_name') | list }}"
   when: metron_hosts is undefined
 
-- name: "Ask Ambari: kibana_hosts"
-  uri:
-    url: "http://{{ groups.ambari_master[0] }}:{{ ambari_port }}/api/v1/clusters/{{ cluster_name }}/services/KIBANA/components/KIBANA_MASTER"
-    user: "{{ ambari_user }}"
-    password: "{{ ambari_password }}"
-    force_basic_auth: yes
-    return_content: yes
-  register: kibana_hosts_response
-  when: kibana_hosts is undefined
+# There's no Kibana here when trying to run_ansible_role.sh sensor-stubs
+#- name: "Ask Ambari: kibana_hosts"
+#  uri:
+#    url: "http://{{ groups.ambari_master[0] }}:{{ ambari_port }}/api/v1/clusters/{{ cluster_name }}/services/KIBANA/components/KIBANA_MASTER"
+#    user: "{{ ambari_user }}"
+#    password: "{{ ambari_password }}"
+#    force_basic_auth: yes
+#    return_content: yes
+#  register: kibana_hosts_response
+#  when: kibana_hosts is undefined
 
-- set_fact:
-    kibana_hosts: "{{ (kibana_hosts_response.content | from_json).host_components | map(attribute='HostRoles.host_name') | list }}"
-  when: kibana_hosts is undefined
+#- set_fact:
+#    kibana_hosts: "{{ (kibana_hosts_response.content | from_json).host_components | map(attribute='HostRoles.host_name') | list }}"
+#  when: kibana_hosts is undefined
 
 
 #

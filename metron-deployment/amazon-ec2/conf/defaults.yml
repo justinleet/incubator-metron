@@ -99,8 +99,8 @@ kafka_log_dirs: "/data2/kafka-log"
 elasticsearch_data_dir: "/data1/elasticsearch,/data2/elasticsearch"
 
 # search
-install_elasticsearch: True
-install_solr: False
+install_elasticsearch: false
+install_solr: True
 elasticsearch_transport_port: 9300
 ## The elasticsearch_network_interface must be in the form specified for Elasticsearch, with leading and trailing underscores.
 elasticsearch_network_interface: _eth0_

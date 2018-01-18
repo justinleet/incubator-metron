@@ -37,11 +37,24 @@ metron_parsers : [METRON_PARSERS]
 metron_rest: [METRON_REST]
 metron_management_ui: [METRON_MANAGEMENT_UI]
 metron_alerts_ui: [METRON_ALERTS_UI]
+solr: [SOLR_SERVER]
+#metrics_monitor: [METRICS_MONITOR]
+#metrics_collector: [METRICS_COLLECTOR]
 
 metron_components: >
   {{ hadoop_master | union(zookeeper_master) | union(storm_master) | union(hbase_master) | union(hadoop_slave) | union(zookeeper_slave) |
-  union(storm_slave) | union(kafka_broker) | union(hbase_slave) | union(kibana_master) | union(metron_indexing) | union(metron_profiler) |
-  union(metron_enrichment_master) | union(metron_parsers) | union(metron_rest) | union(metron_management_ui) | union(metron_alerts_ui) | union(es_master)  }}
+  union(storm_slave) | union(kafka_broker) | union(hbase_slave) | union(metron_indexing) | union(metron_profiler) |
+  union(metron_enrichment_master) | union(metron_parsers) | union(metron_rest) | union(metron_management_ui) | union(metron_alerts_ui) | union(solr) }}
+
+#metron_components: >
+#  {{ hadoop_master | union(zookeeper_master) | union(storm_master) | union(hbase_master) | union(hadoop_slave) | union(zookeeper_slave) |
+#  union(storm_slave) | union(kafka_broker) | union(hbase_slave) | union(metron_indexing) | union(metron_profiler) |
+#  union(metron_enrichment_master) | union(metron_parsers) | union(metron_rest) | union(metron_management_ui) | union(metron_alerts_ui) |
+#  union(solr) | union(metrics_monitor) | union(metrics_collector) }}
+
+#metron_components: >
+#  {{ hadoop_master | union(zookeeper_master) | union(storm_master) | union(hbase_master) | union(hadoop_slave) | union(zookeeper_slave) |
+#  union(storm_slave) | union(kafka_broker) | union(hbase_slave) | union(solr) }}
 
 cluster_name: "metron_cluster"
 blueprint_name: "metron_blueprint"
@@ -103,6 +116,12 @@ configurations:
       gateway_recover_after_data_nodes: 1
       network_host: "[ _local_, {{ elasticsearch_network_interface }} ]"
       masters_also_are_datanodes: "1"
+  - storm-site:
+      nimbus.childopts: "-Xmx1024m _JAAS_PLACEHOLDER"
+      supervisor.childopts: "-Xmx256m _JAAS_PLACEHOLDER -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.port={{ '{{' }}jmxremote_port{{ '}}' }}"
+      worker.childopts: "-Xmx768m _JAAS_PLACEHOLDER"
+      storm.cluster.metrics.consumer.register: '[{"class": "org.apache.storm.metric.LoggingMetricsConsumer"}]'
+      topology.metrics.consumer.register: '[{"class": "org.apache.storm.metric.LoggingMetricsConsumer", "parallelism.hint": 1, "whitelist": ["kafkaOffset\\..+/", "__complete-latency", "__process-latency", "__receive\\.population$", "__sendqueue\\.population$", "__execute-count", "__emit-count", "__ack-count", "__fail-count", "memory/heap\\.usedBytes$", "memory/nonHeap\\.usedBytes$", "GC/.+\\.count$", "GC/.+\\.timeMs$"]}]'
 
 required_configurations:
   - metron-env:
@@ -122,6 +141,8 @@ required_configurations:
       kibana_server_port: 5000
       kibana_default_application: "dashboard/AV-YpDmwdXwc6Ua9Muh9"
       kibana_server_host: 0.0.0.0
+  - ams-grafana-env:
+      metrics_grafana_password: "root"
 
 blueprint:
   stack_name: HDP

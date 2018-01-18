@@ -175,75 +175,79 @@ class IndexingCommands:
         Logger.info('Done creating HDFS indexing directory')
 
     def check_elasticsearch_templates(self):
-        for template_name in self.get_templates():
-
-            # check for the index template
-            cmd = "curl -s -XGET \"http://{0}/_template/{1}\" | grep -o {1}"
-            err_msg="Missing Elasticsearch index template: name={0}"
-            metron_service.execute(
-              cmd=cmd.format(self.__params.es_http_url, template_name),
-              user=self.__params.metron_user,
-              err_msg=err_msg.format(template_name))
+      Logger.info('Not starting indexing, because we need to clean out ES exclusivity first')
+        # for template_name in self.get_templates():
+        #
+        #     # check for the index template
+        #     cmd = "curl -s -XGET \"http://{0}/_template/{1}\" | grep -o {1}"
+        #     err_msg="Missing Elasticsearch index template: name={0}"
+        #     metron_service.execute(
+        #       cmd=cmd.format(self.__params.es_http_url, template_name),
+        #       user=self.__params.metron_user,
+        #       err_msg=err_msg.format(template_name))
 
     def start_indexing_topology(self, env):
-        Logger.info('Starting ' + self.__indexing_topology)
-
-        if not self.is_topology_active(env):
-            if self.__params.security_enabled:
-                metron_security.kinit(self.__params.kinit_path_local,
-                                      self.__params.metron_keytab_path,
-                                      self.__params.metron_principal_name,
-                                      execute_user=self.__params.metron_user)
-
-            start_cmd_template = """{0}/bin/start_elasticsearch_topology.sh \
-                                        -s {1} \
-                                        -z {2}"""
-            start_cmd = start_cmd_template.format(self.__params.metron_home,
-                                                  self.__indexing_topology,
-                                                  self.__params.zookeeper_quorum)
-            Execute(start_cmd, user=self.__params.metron_user, tries=3, try_sleep=5, logoutput=True)
-
-        else:
-            Logger.info('Indexing topology already running')
-
-        Logger.info('Finished starting indexing topology')
+        Logger.info('Not starting indexing, because we need to clean out ES exclusivity first')
+        # Logger.info('Starting ' + self.__indexing_topology)
+        #
+        # if not self.is_topology_active(env):
+        #     if self.__params.security_enabled:
+        #         metron_security.kinit(self.__params.kinit_path_local,
+        #                               self.__params.metron_keytab_path,
+        #                               self.__params.metron_principal_name,
+        #                               execute_user=self.__params.metron_user)
+        #
+        #     start_cmd_template = """{0}/bin/start_elasticsearch_topology.sh \
+        #                                 -s {1} \
+        #                                 -z {2}"""
+        #     start_cmd = start_cmd_template.format(self.__params.metron_home,
+        #                                           self.__indexing_topology,
+        #                                           self.__params.zookeeper_quorum)
+        #     Execute(start_cmd, user=self.__params.metron_user, tries=3, try_sleep=5, logoutput=True)
+        #
+        # else:
+        #     Logger.info('Indexing topology already running')
+        #
+        # Logger.info('Finished starting indexing topology')
 
     def stop_indexing_topology(self, env):
-        Logger.info('Stopping ' + self.__indexing_topology)
-
-        if self.is_topology_active(env):
-            if self.__params.security_enabled:
-                metron_security.kinit(self.__params.kinit_path_local,
-                                      self.__params.metron_keytab_path,
-                                      self.__params.metron_principal_name,
-                                      execute_user=self.__params.metron_user)
-            stop_cmd = 'storm kill ' + self.__indexing_topology
-            Execute(stop_cmd, user=self.__params.metron_user, tries=3, try_sleep=5, logoutput=True)
-
-        else:
-            Logger.info("Indexing topology already stopped")
-
-        Logger.info('Done stopping indexing topologies')
+        Logger.info('Not stopping indexing, because we need to clean out ES exclusivity first')
+        # Logger.info('Stopping ' + self.__indexing_topology)
+        #
+        # if self.is_topology_active(env):
+        #     if self.__params.security_enabled:
+        #         metron_security.kinit(self.__params.kinit_path_local,
+        #                               self.__params.metron_keytab_path,
+        #                               self.__params.metron_principal_name,
+        #                               execute_user=self.__params.metron_user)
+        #     stop_cmd = 'storm kill ' + self.__indexing_topology
+        #     Execute(stop_cmd, user=self.__params.metron_user, tries=3, try_sleep=5, logoutput=True)
+        #
+        # else:
+        #     Logger.info("Indexing topology already stopped")
+        #
+        # Logger.info('Done stopping indexing topologies')
 
     def restart_indexing_topology(self, env):
-        Logger.info('Restarting the indexing topologies')
-        self.stop_indexing_topology(env)
-
-        # Wait for old topology to be cleaned up by Storm, before starting again.
-        retries = 0
-        topology_active = self.is_topology_active(env)
-        while self.is_topology_active(env) and retries < 3:
-            Logger.info('Existing topology still active. Will wait and retry')
-            time.sleep(10)
-            retries += 1
-
-        if not topology_active:
-            Logger.info('Waiting for storm kill to complete')
-            time.sleep(30)
-            self.start_indexing_topology(env)
-            Logger.info('Done restarting the indexing topologies')
-        else:
-            Logger.warning('Retries exhausted. Existing topology not cleaned up.  Aborting topology start.')
+        Logger.info('Not restarting indexing, because we need to clean out ES exclusivity first')
+        # Logger.info('Restarting the indexing topologies')
+        # self.stop_indexing_topology(env)
+        #
+        # # Wait for old topology to be cleaned up by Storm, before starting again.
+        # retries = 0
+        # topology_active = self.is_topology_active(env)
+        # while self.is_topology_active(env) and retries < 3:
+        #     Logger.info('Existing topology still active. Will wait and retry')
+        #     time.sleep(10)
+        #     retries += 1
+        #
+        # if not topology_active:
+        #     Logger.info('Waiting for storm kill to complete')
+        #     time.sleep(30)
+        #     self.start_indexing_topology(env)
+        #     Logger.info('Done restarting the indexing topologies')
+        # else:
+        #     Logger.warning('Retries exhausted. Existing topology not cleaned up.  Aborting topology start.')
 
     def is_topology_active(self, env):
         env.set_params(self.__params)
@@ -260,27 +264,28 @@ class IndexingCommands:
         Performs a service check for Indexing.
         :param env: Environment
         """
-        Logger.info('Checking Kafka topics for Indexing')
-        metron_service.check_kafka_topics(self.__params, self.__get_topics())
-
-        Logger.info("Checking HBase for Indexing")
-        metron_service.check_hbase_table(self.__params, self.__params.update_hbase_table)
-        metron_service.check_hbase_column_family(self.__params, self.__params.update_hbase_table, self.__params.update_hbase_cf)
-
-        Logger.info('Checking Elasticsearch templates for Indexing')
-        self.check_elasticsearch_templates()
-
-        if self.__params.security_enabled:
-
-            Logger.info('Checking Kafka ACLs for Indexing')
-            metron_service.check_kafka_acls(self.__params, self.__get_topics())
-            metron_service.check_kafka_acl_groups(self.__params, self.__get_kafka_acl_groups())
-
-            Logger.info("Checking HBase ACLs for Indexing")
-            metron_service.check_hbase_acls(self.__params, self.__params.update_hbase_table)
-
-        Logger.info("Checking for Indexing topology")
-        if not self.is_topology_active(env):
-            raise Fail("Indexing topology not running")
-
-        Logger.info("Indexing service check completed successfully")
+        Logger.info('Not checking indexing, because we need to clean out ES exclusivity first')
+        # Logger.info('Checking Kafka topics for Indexing')
+        # metron_service.check_kafka_topics(self.__params, self.__get_topics())
+        #
+        # Logger.info("Checking HBase for Indexing")
+        # metron_service.check_hbase_table(self.__params, self.__params.update_hbase_table)
+        # metron_service.check_hbase_column_family(self.__params, self.__params.update_hbase_table, self.__params.update_hbase_cf)
+        #
+        # Logger.info('Checking Elasticsearch templates for Indexing')
+        # self.check_elasticsearch_templates()
+        #
+        # if self.__params.security_enabled:
+        #
+        #     Logger.info('Checking Kafka ACLs for Indexing')
+        #     metron_service.check_kafka_acls(self.__params, self.__get_topics())
+        #     metron_service.check_kafka_acl_groups(self.__params, self.__get_kafka_acl_groups())
+        #
+        #     Logger.info("Checking HBase ACLs for Indexing")
+        #     metron_service.check_hbase_acls(self.__params, self.__params.update_hbase_table)
+        #
+        # Logger.info("Checking for Indexing topology")
+        # if not self.is_topology_active(env):
+        #     raise Fail("Indexing topology not running")
+        #
+        # Logger.info("Indexing service check completed successfully")

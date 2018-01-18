@@ -15,8 +15,9 @@
 #  limitations under the License.
 #
 ---
-- name: Sanity check Metron web
-  local_action: wait_for host="{{ groups.web[0] }}" port=5000 timeout="{{ timeout_secs }}"
+# No Kibana to sanity check
+#- name: Sanity check Metron web
+#  local_action: wait_for host="{{ groups.web[0] }}" port=5000 timeout="{{ timeout_secs }}"
 
 - name: Sanity check Ambari web
   local_action: wait_for host="{{ groups.ambari_master[0] }}" port="{{ ambari_port }}" timeout="{{ timeout_secs }}"

@@ -35,7 +35,7 @@
 - hosts: ambari_master
   become: true
   roles:
-    - role: ambari_config
+    - ambari_config
   tags:
     - hdp-install
     - hdp-deploy
@@ -43,9 +43,16 @@
 - hosts: ambari_master
   become: true
   roles:
-    - role: load_web_templates
+    - solr
   tags:
-    - load_templates
+    - solr_install
+
+#- hosts: ambari_master
+#  become: true
+#  roles:
+#    - role: load_web_templates
+#  tags:
+#    - load_templates
 
 - hosts: pcap_server
   become: true

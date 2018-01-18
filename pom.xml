@@ -87,7 +87,7 @@
         <global_accumulo_version>1.8.0</global_accumulo_version>
         <global_antlr_version>4.5</global_antlr_version>
         <global_opencsv_version>3.7</global_opencsv_version>
-        <global_curator_version>2.7.1</global_curator_version>
+        <global_curtor_version>2.7.1</global_curtor_version>
         <global_classindex_version>3.3</global_classindex_version>
         <global_storm_version>1.0.3</global_storm_version>
         <global_storm_kafka_version>1.1.0</global_storm_kafka_version>

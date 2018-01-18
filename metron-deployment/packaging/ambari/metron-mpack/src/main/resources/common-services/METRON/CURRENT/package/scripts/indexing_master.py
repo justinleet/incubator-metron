@@ -82,17 +82,18 @@ class Indexing(Script):
         self.configure(env)
         commands = IndexingCommands(params)
 
+        Logger.info('Not installing indexing templates, because we need to clean out ES exclusivity first')
         # Install elasticsearch templates
-        try:
-            if not commands.is_elasticsearch_template_installed():
-                self.elasticsearch_template_install(env)
-                commands.set_elasticsearch_template_installed()
-
-        except Exception as e:
-            msg = "WARNING: Elasticsearch index templates could not be installed.  " \
-                  "Is Elasticsearch running?  error={0}"
-            Logger.warning(msg.format(e))
-            raise
+        # try:
+        #     if not commands.is_elasticsearch_template_installed():
+        #         self.elasticsearch_template_install(env)
+        #         commands.set_elasticsearch_template_installed()
+        #
+        # except Exception as e:
+        #     msg = "WARNING: Elasticsearch index templates could not be installed.  " \
+        #           "Is Elasticsearch running?  error={0}"
+        #     Logger.warning(msg.format(e))
+        #     raise
 
         commands.start_indexing_topology(env)
 
@@ -105,9 +106,10 @@ class Indexing(Script):
     def status(self, env):
         from params import status_params
         env.set_params(status_params)
-        commands = IndexingCommands(status_params)
-        if not commands.is_topology_active(env):
-            raise ComponentIsNotRunning()
+        Logger.info('Not checking status, because we need to clean out ES exclusivity first')
+        # commands = IndexingCommands(status_params)
+        # if not commands.is_topology_active(env):
+        #     raise ComponentIsNotRunning()
 
     def restart(self, env):
         from params import params
