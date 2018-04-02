@@ -22,21 +22,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
-import org.apache.beam.sdk.io.kafka.KafkaIO;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
-import org.apache.beam.sdk.testing.TestPipeline;
-import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.values.KV;
-import org.apache.beam.sdk.values.PCollection;
-import org.apache.kafka.common.serialization.ByteArrayDeserializer;
-import org.apache.kafka.common.serialization.StringSerializer;
-import org.apache.metron.beam.transform.JsonToString;
-import org.apache.metron.beam.transform.MessageParser;
 import org.apache.metron.common.Constants;
 import org.apache.metron.integration.UnableToStartException;
 import org.apache.metron.integration.components.KafkaComponent;
@@ -44,65 +34,56 @@ import org.apache.metron.integration.components.KafkaComponent.Topic;
 import org.apache.metron.integration.components.ZKServerComponent;
 import org.apache.metron.integration.utils.TestUtils;
 
-public class ParserPipeline {
+/**
+ * Meant to mirror the UnifiedEnrichmentBolt in terms of performing enrichments.
+ */
 
-  public static final String SAMPLE_DATA_PARSED_PATH = "metron-platform/metron-integration-test/src/main/sample/data/bro/raw/";
-  public static final String sampleAsaPath = SAMPLE_DATA_PARSED_PATH + "BroExampleOutput";
-  private static final String PARSER_TOPIC = "testParser";
-  private static final String SENSOR_TYPE = "bro";
+public class EnrichmentPipelineTest {
 
+  public static final String SAMPLE_DATA_PARSED_PATH = "metron-platform/metron-integration-test/src/main/sample/data/test/parsed/";
+  public static final String sampleParsedPath = SAMPLE_DATA_PARSED_PATH + "TestExampleParsed";
   private static ZKServerComponent zkComponent;
   static final Properties topologyProperties = new Properties();
 
   public static void main(String[] args)
       throws UnableToStartException, InterruptedException, IOException {
-    List<byte[]> inputMessages = getInputMessages(sampleAsaPath);
-    System.out.println("Working Directory = " + System.getProperty("user.dir"));
+    List<byte[]> inputMessages = getInputMessages(sampleParsedPath);
     zkComponent = getZKServerComponent(topologyProperties);
     zkComponent.start();
     final KafkaComponent kafkaComponent = new KafkaComponent()
         .withTopics(new ArrayList<Topic>() {
                       {
                         add(new KafkaComponent.Topic(Constants.ENRICHMENT_TOPIC, 1));
-                        add(new KafkaComponent.Topic(PARSER_TOPIC, 1));
+                        add(new KafkaComponent.Topic(Constants.INDEXING_TOPIC, 1));
                       }
                     }
         ).withTopologyProperties(topologyProperties)
         .withExistingZookeeper(zkComponent.getConnectionString());
     kafkaComponent.start();
-    kafkaComponent.writeMessages(PARSER_TOPIC, inputMessages);
+    kafkaComponent.writeMessages(Constants.ENRICHMENT_TOPIC, inputMessages);
 
     PipelineOptions options = PipelineOptionsFactory.create();
-
-    // Then create the pipeline.
-    Pipeline p = TestPipeline.create(options);
-
-    Map<String, Object> configs = new HashMap<>();
-    configs.put("auto.offset.reset", "earliest");
-
-    PCollection<KV<String, String>> output = p.apply(
-        "Metron-Parser",
-        KafkaIO.<byte[], byte[]>read()
-            .withBootstrapServers(kafkaComponent.getBrokerList())
-            .withTopic(PARSER_TOPIC)
-            .withKeyDeserializer(ByteArrayDeserializer.class)
-            .withValueDeserializer(ByteArrayDeserializer.class)
-            .updateConsumerProperties(configs)
-            .withMaxNumRecords(10)
-    )
-        .apply(ParDo.of(new MessageParser()))
-        .apply(ParDo.of(new JsonToString()));
-    output
-        .apply(KafkaIO.<String, String>write().withBootstrapServers(kafkaComponent.getBrokerList())
-            .withTopic(Constants.ENRICHMENT_TOPIC)
-            .withKeySerializer(StringSerializer.class)
-            .withValueSerializer(StringSerializer.class));
+    EnrichmentPipelineBuilder builder = new EnrichmentPipelineBuilder();
+    builder.setEnrichmentTopic(Constants.ENRICHMENT_TOPIC);
+    builder.setIndexingTopic(Constants.INDEXING_TOPIC);
+    builder.setKafkaBrokerList(kafkaComponent.getBrokerList());
+    builder.setPipelineOptions(options);
+    builder.setKafkaConfig(
+        new HashMap<String, Object>() {
+          {
+            put("auto.offset.reset", "earliest");
+          }
+        }
+    );
+//    builder.setStrategy()
+//    builder.setZookeeper()
+    Pipeline p = builder.build();
 
     PipelineResult stuff = p.run();
     Thread.sleep(8000L); // TODO anything but this
     stuff.cancel();
 
-    List<byte[]> messages = kafkaComponent.readMessages(Constants.ENRICHMENT_TOPIC);
+    List<byte[]> messages = kafkaComponent.readMessages(Constants.INDEXING_TOPIC);
     System.out.println("OUTPUT SIZE:" + messages.size());
     for (byte[] message : messages) {
       System.out.println("OUTPUT MESSAGE:" + new String(message));
@@ -124,7 +105,10 @@ public class ParserPipeline {
     return new ZKServerComponent()
         .withPostStartCallback((zkComponent) -> {
               topologyProperties
-                  .setProperty(ZKServerComponent.ZOOKEEPER_PROPERTY, zkComponent.getConnectionString());
+                  .setProperty(
+                      ZKServerComponent.ZOOKEEPER_PROPERTY,
+                      zkComponent.getConnectionString()
+                  );
               topologyProperties.setProperty("kafka.zk", zkComponent.getConnectionString());
             }
         );

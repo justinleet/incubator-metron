@@ -172,6 +172,11 @@
       <artifactId>metron-parsers</artifactId>
       <version>0.4.3</version>
     </dependency>
+    <dependency>
+      <groupId>org.adrianwalker</groupId>
+      <artifactId>multiline-string</artifactId>
+      <version>0.1.2</version>
+    </dependency>
   </dependencies>
 
   <build>

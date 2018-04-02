@@ -46,7 +46,8 @@ public class StellarTransform extends DoFn<JSONObject, KV<String, String>> {
      "fieldMap": {
        "stellar" : {
          "config" : {
-           "stmt1" : "TO_UPPER(source.type)"
+           "stmt1" : "TO_UPPER(source.type)",
+           "stmt2" : "TO_LOWER(iflags)"
          }
        }
      }
