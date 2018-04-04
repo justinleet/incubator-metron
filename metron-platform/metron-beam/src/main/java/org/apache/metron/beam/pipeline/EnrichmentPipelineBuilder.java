@@ -97,10 +97,9 @@ public class EnrichmentPipelineBuilder {
             .withKeyDeserializer(ByteArrayDeserializer.class)
             .withValueDeserializer(ByteArrayDeserializer.class)
             .updateConsumerProperties(kafkaConfig)
-            .withMaxNumRecords(10)
     )
         .apply(ParDo.of(new JsonParse()))
-        .apply(ParDo.of(new StellarTransform()));
+        .apply(ParDo.of(new StellarTransform(zookeeper)));
     output
         .apply(KafkaIO.<String, String>write().withBootstrapServers(kafkaBrokerList)
             .withTopic(indexingTopic)
