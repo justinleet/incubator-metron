@@ -63,7 +63,7 @@ public class SolrIndexingIntegrationTest extends IndexingIntegrationTest {
                   globalConfig.put("solr.zookeeper", solrComponent.getZookeeperUrl());
                   ConfigurationsUtils.writeGlobalConfigToZookeeper(JSONUtils.INSTANCE.toJSONPretty(globalConfig), testZookeeperUrl);
                 } catch (Exception e) {
-                  e.printStackTrace();
+                  throw new IllegalStateException("Error during post start callback");
                 }
                 return null;
               }
