@@ -17,35 +17,28 @@
  */
 package org.apache.metron.solr.dao;
 
+import static org.mockito.Matchers.argThat;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import org.apache.metron.indexing.dao.AccessConfig;
 import org.apache.metron.indexing.dao.update.Document;
 import org.apache.metron.solr.matcher.SolrInputDocumentListMatcher;
 import org.apache.metron.solr.matcher.SolrInputDocumentMatcher;
 import org.apache.solr.client.solrj.SolrClient;
-import org.apache.solr.client.solrj.request.CollectionAdminRequest;
 import org.apache.solr.common.SolrInputDocument;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
 import org.mockito.Matchers;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-
-import static org.mockito.Matchers.argThat;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({CollectionAdminRequest.class})
 public class SolrUpdateDaoTest {
 
   @Rule
@@ -75,7 +68,7 @@ public class SolrUpdateDaoTest {
 
   @Test
   public void updateShouldProperlyUpdateDocument() throws Exception {
-    Document document = new Document(new HashMap<String, Object>(){{
+    Document document = new Document(new HashMap<String, Object>() {{
       put("field", "value");
     }}, "guid", "bro", 0L);
 
@@ -93,16 +86,16 @@ public class SolrUpdateDaoTest {
 
   @Test
   public void batchUpdateShouldProperlyUpdateDocuments() throws Exception {
-    Document broDocument1 = new Document(new HashMap<String, Object>(){{
+    Document broDocument1 = new Document(new HashMap<String, Object>() {{
       put("broField1", "value");
       put("guid", "broGuid1");
     }}, "broGuid1", "bro", 0L);
-    Document broDocument2 = new Document(new HashMap<String, Object>(){{
+    Document broDocument2 = new Document(new HashMap<String, Object>() {{
       put("broField2", "value");
       put("guid", "broGuid2");
     }}, "broGuid2", "bro", 0L);
 
-    Map<Document, Optional<String>> updates = new HashMap<Document, Optional<String>>(){{
+    Map<Document, Optional<String>> updates = new HashMap<Document, Optional<String>>() {{
       put(broDocument1, Optional.of("bro"));
       put(broDocument2, Optional.of("bro"));
     }};
@@ -116,21 +109,22 @@ public class SolrUpdateDaoTest {
 
     solrUpdateDao.batchUpdate(updates);
 
-    verify(client).add(eq("bro"), argThat(new SolrInputDocumentListMatcher(Arrays.asList(broSolrInputDocument1, broSolrInputDocument2))));
+    verify(client).add(eq("bro"), argThat(new SolrInputDocumentListMatcher(
+        Arrays.asList(broSolrInputDocument1, broSolrInputDocument2))));
   }
 
   @Test
   public void batchUpdateShouldProperlyUpdateDocumentsWithoutIndex() throws Exception {
-    Document snortDocument1 = new Document(new HashMap<String, Object>(){{
+    Document snortDocument1 = new Document(new HashMap<String, Object>() {{
       put("snortField1", "value");
       put("guid", "snortGuid1");
     }}, "snortGuid1", "snort", 0L);
-    Document snortDocument2 = new Document(new HashMap<String, Object>(){{
+    Document snortDocument2 = new Document(new HashMap<String, Object>() {{
       put("snortField2", "value");
       put("guid", "snortGuid2");
     }}, "snortGuid2", "snort", 0L);
 
-    Map<Document, Optional<String>> updates = new HashMap<Document, Optional<String>>(){{
+    Map<Document, Optional<String>> updates = new HashMap<Document, Optional<String>>() {{
       put(snortDocument1, Optional.empty());
       put(snortDocument2, Optional.empty());
     }};
@@ -144,7 +138,7 @@ public class SolrUpdateDaoTest {
 
     solrUpdateDao.batchUpdate(updates);
 
-    verify(client).add((String) Matchers.isNull(), argThat(new SolrInputDocumentListMatcher(Arrays.asList(snortSolrInputDocument1, snortSolrInputDocument2))));
+    verify(client).add((String) Matchers.isNull(), argThat(new SolrInputDocumentListMatcher(
+        Arrays.asList(snortSolrInputDocument1, snortSolrInputDocument2))));
   }
-
 }

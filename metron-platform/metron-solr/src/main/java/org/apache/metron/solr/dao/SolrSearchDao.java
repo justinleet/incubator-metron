@@ -161,7 +161,7 @@ public class SolrSearchDao implements SearchDao {
     return query;
   }
 
-  private String getCollections(List<String> indices) throws IOException, SolrServerException {
+  String getCollections(List<String> indices) throws IOException, SolrServerException {
     List<String> existingCollections = CollectionAdminRequest.listCollections(client);
     return indices.stream().filter(existingCollections::contains).collect(Collectors.joining(","));
   }

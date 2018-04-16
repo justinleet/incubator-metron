@@ -29,7 +29,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
-import static org.powermock.api.mockito.PowerMockito.mockStatic;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -56,7 +55,6 @@ import org.apache.metron.solr.matcher.ModifiableSolrParamsMatcher;
 import org.apache.metron.solr.matcher.SolrQueryMatcher;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.request.CollectionAdminRequest;
 import org.apache.solr.client.solrj.response.FacetField;
 import org.apache.solr.client.solrj.response.FieldStatsInfo;
 import org.apache.solr.client.solrj.response.PivotField;
@@ -69,12 +67,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({CollectionAdminRequest.class})
 public class SolrSearchDaoTest {
 
   @Rule
@@ -82,18 +75,17 @@ public class SolrSearchDaoTest {
 
   private SolrClient client;
   private AccessConfig accessConfig;
+
   private SolrSearchDao solrSearchDao;
   private SolrRetrieveLatestDao solrRetrieveLatestDao;
 
   @SuppressWarnings("unchecked")
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     client = mock(SolrClient.class);
     accessConfig = mock(AccessConfig.class);
     solrSearchDao = new SolrSearchDao(client, accessConfig);
     solrRetrieveLatestDao = new SolrRetrieveLatestDao(client);
-    mockStatic(CollectionAdminRequest.class);
-    when(CollectionAdminRequest.listCollections(client)).thenReturn(Arrays.asList("bro", "snort"));
   }
 
   @Test
@@ -151,8 +143,10 @@ public class SolrSearchDaoTest {
     GroupRequest groupRequest = mock(GroupRequest.class);
     QueryResponse queryResponse = mock(QueryResponse.class);
     GroupResponse groupResponse = mock(GroupResponse.class);
+    List<String> indices = Arrays.asList("bro", "snort");
 
     solrSearchDao = spy(new SolrSearchDao(client, accessConfig));
+    doReturn("bro,snort").when(solrSearchDao).getCollections(indices);
     Group group1 = new Group();
     group1.setField("field1");
     Group group2 = new Group();
@@ -160,7 +154,7 @@ public class SolrSearchDaoTest {
     when(groupRequest.getQuery()).thenReturn("query");
     when(groupRequest.getGroups()).thenReturn(Arrays.asList(group1, group2));
     when(groupRequest.getScoreField()).thenReturn(Optional.of("scoreField"));
-    when(groupRequest.getIndices()).thenReturn(Arrays.asList("bro", "snort"));
+    when(groupRequest.getIndices()).thenReturn(indices);
     when(client.query(any())).thenReturn(queryResponse);
     doReturn(groupResponse).when(solrSearchDao).buildGroupResponse(groupRequest, queryResponse);
     SolrQuery expectedSolrQuery = new SolrQuery()
@@ -229,8 +223,9 @@ public class SolrSearchDaoTest {
 
   @Test
   public void buildSearchRequestShouldReturnSolrQuery() throws Exception {
+    List<String> indices = Arrays.asList("bro", "snort");
     SearchRequest searchRequest = new SearchRequest();
-    searchRequest.setIndices(Arrays.asList("bro", "snort"));
+    searchRequest.setIndices(indices);
     searchRequest.setSize(5);
     searchRequest.setFrom(10);
     searchRequest.setQuery("query");
@@ -240,6 +235,9 @@ public class SolrSearchDaoTest {
     searchRequest.setSort(Collections.singletonList(sortField));
     searchRequest.setFields(Arrays.asList("field1", "field2"));
     searchRequest.setFacetFields(Arrays.asList("facetField1", "facetField2"));
+
+    solrSearchDao = spy(new SolrSearchDao(client, accessConfig));
+    doReturn("bro,snort").when(solrSearchDao).getCollections(indices);
 
     SolrQuery exceptedSolrQuery = new SolrQuery()
         .setStart(10)
