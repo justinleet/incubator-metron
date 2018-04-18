@@ -99,6 +99,14 @@ public class SolrParentChildTest {
 
   @Test
   public void shouldSearchByNestedAlertMin() throws Exception {
+    setupData();
+    queryChildDocs();
+    queryParentDocs();
+    queryWithoutTransformer();
+    queryWithTransformer();
+  }
+
+  protected void setupData() throws IOException, SolrServerException {
     // Load alerts
     List<Map<String, Object>> alerts = buildAlerts(4);
     alerts.get(0).put(METAALERT_FIELD, Collections.singletonList("meta_active"));
@@ -121,58 +129,6 @@ public class SolrParentChildTest {
         Optional.of(Arrays.asList(alerts.get(2), alerts.get(3))));
     // We pass MetaAlertDao.METAALERT_TYPE, because the "_doc" gets appended automatically.
     solr.addDocs(METAALERTS_COLLECTION, Arrays.asList(activeMetaAlert, inactiveMetaAlert));
-
-    System.out.println("Test Docs");
-    SolrQuery queryAll = new SolrQuery();
-    queryAll.setQuery("*:*");
-    queryAll.set("collection", "test");
-    queryAll.set("fl", "*,[docid]");
-    QueryResponse results = solr.getSolrClient().query(queryAll);
-    for (SolrDocument result : results.getResults()) {
-      System.out.println(result);
-    }
-
-    System.out.println("Metaalert Docs");
-    queryAll = new SolrQuery();
-    queryAll.setQuery("{!child of=source.type:metaalert}");
-    queryAll.set("collection", "metaalert");
-    queryAll.set("fl", "*, [docid], [child parentFilter=source.type:metaalert]");
-    results = solr.getSolrClient().query(queryAll);
-    for (SolrDocument result : results.getResults()) {
-      System.out.println("  " + result);
-      if (result.hasChildDocuments()) {
-        for(SolrDocument childResult : result.getChildDocuments()) {
-          System.out.println("    " + childResult);
-        }
-      }
-    }
-
-    System.out.println("No [child]");
-    queryAll = new SolrQuery();
-    queryAll.setQuery(
-        "+ip_src_addr:192.168.1.3 -metaalerts:[* TO *] -source.type:metaalert");
-    queryAll.set("collection", "test,metaalert");
-    queryAll.set("fl", "*, [docid]");
-    results = solr.getSolrClient().query(queryAll);
-    for (SolrDocument result : results.getResults()) {
-      System.out.println("  " + result);
-    }
-
-    System.out.println("[child]");
-    queryAll = new SolrQuery();
-    queryAll.setQuery(
-        "+ip_src_addr:192.168.1.3 -metaalerts:[* TO *] -source.type:metaalert");
-    queryAll.setStart(0);
-    queryAll.setRows(1);
-    queryAll.set("collection", "test,metaalert");
-    queryAll.set("fl", "*, [docid], [child parentFilter=source.type:metaalert]");
-    results = solr.getSolrClient().query(queryAll);
-    for (SolrDocument result : results.getResults()) {
-      System.out.println("  " + result);
-      if (result.hasChildDocuments()) {
-        System.out.println("    " + result.getChildDocuments());
-      }
-    }
   }
 
   protected List<Map<String, Object>> buildAlerts(int count) {
@@ -200,5 +156,71 @@ public class SolrParentChildTest {
       metaAlert.put(ALERT_FIELD, alertsList);
     }
     return metaAlert;
+  }
+
+  protected void queryChildDocs() throws SolrServerException, IOException {
+    System.out.println("Child Docs");
+    SolrQuery queryAll = new SolrQuery();
+    queryAll.setQuery("*:*");
+    queryAll.set("collection", "test");
+    queryAll.set("fl", "*,[docid]");
+    QueryResponse results = solr.getSolrClient().query(queryAll);
+    for (SolrDocument result : results.getResults()) {
+      System.out.println(result);
+    }
+  }
+
+  protected void queryParentDocs() throws SolrServerException, IOException {
+    SolrQuery queryAll;
+    QueryResponse results;
+    System.out.println("Metaalert Docs");
+    queryAll = new SolrQuery();
+    queryAll.setQuery("{!child of=source.type:metaalert}");
+    queryAll.set("collection", "metaalert");
+    queryAll.set("fl", "*, [docid], [child parentFilter=source.type:metaalert]");
+    results = solr.getSolrClient().query(queryAll);
+    for (SolrDocument result : results.getResults()) {
+      System.out.println("  " + result);
+      if (result.hasChildDocuments()) {
+        for (SolrDocument childResult : result.getChildDocuments()) {
+          System.out.println("    " + childResult);
+        }
+      }
+    }
+  }
+
+  protected void queryWithoutTransformer() throws SolrServerException, IOException {
+    SolrQuery queryAll;
+    QueryResponse results;
+    System.out.println("No [child]");
+    queryAll = new SolrQuery();
+    queryAll.setQuery(
+        "+ip_src_addr:192.168.1.3 -metaalerts:[* TO *] -source.type:metaalert");
+    queryAll.set("collection", "test,metaalert");
+    queryAll.set("fl", "*, [docid]");
+    results = solr.getSolrClient().query(queryAll);
+    for (SolrDocument result : results.getResults()) {
+      System.out.println("  " + result);
+    }
+  }
+
+  protected void queryWithTransformer() throws SolrServerException, IOException {
+    SolrQuery queryAll;
+    QueryResponse results;
+    System.out.println("[child]");
+    queryAll = new SolrQuery();
+    queryAll.setQuery(
+        "+ip_src_addr:192.168.1.3 -metaalerts:[* TO *] -source.type:metaalert");
+    queryAll.setStart(0);
+    queryAll.setRows(1);
+    queryAll.set("collection", "test,metaalert");
+    queryAll.set("fl", "*, [docid], [child parentFilter=source.type:metaalert]");
+    results = solr.getSolrClient().query(queryAll);
+    for (SolrDocument result : results.getResults()) {
+      System.out.println("  " + result);
+      if (result.hasChildDocuments()) {
+        System.out.println("    " + result.getChildDocuments());
+      }
+    }
   }
 }
