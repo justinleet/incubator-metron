@@ -48,6 +48,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class SolrParentChildTest {
+
   private static final String COLLECTION = "test";
   private static final String SOURCE_TYPE = "source.type";
 
@@ -64,8 +65,8 @@ public class SolrParentChildTest {
   public void setup()
       throws IOException, InterruptedException, SolrServerException, KeeperException {
     solr.addCollection(METAALERTS_COLLECTION,
-        "../metron-solr/src/test/resources/config/metaalert/conf");
-    solr.addCollection(COLLECTION, "../metron-solr/src/test/resources/config/test/conf");
+        "../metron-solr/src/test/resources/config/parent/conf");
+    solr.addCollection(COLLECTION, "../metron-solr/src/test/resources/config/child/conf");
   }
 
   @AfterClass
@@ -121,7 +122,6 @@ public class SolrParentChildTest {
     // We pass MetaAlertDao.METAALERT_TYPE, because the "_doc" gets appended automatically.
     solr.addDocs(METAALERTS_COLLECTION, Arrays.asList(activeMetaAlert, inactiveMetaAlert));
 
-
     System.out.println("Test Docs");
     SolrQuery queryAll = new SolrQuery();
     queryAll.setQuery("*:*");
@@ -134,12 +134,17 @@ public class SolrParentChildTest {
 
     System.out.println("Metaalert Docs");
     queryAll = new SolrQuery();
-    queryAll.setQuery("*:*");
+    queryAll.setQuery("{!child of=source.type:metaalert}");
     queryAll.set("collection", "metaalert");
-    queryAll.set("fl", "*,[docid]");
+    queryAll.set("fl", "*, [docid], [child parentFilter=source.type:metaalert]");
     results = solr.getSolrClient().query(queryAll);
     for (SolrDocument result : results.getResults()) {
       System.out.println("  " + result);
+      if (result.hasChildDocuments()) {
+        for(SolrDocument childResult : result.getChildDocuments()) {
+          System.out.println("    " + childResult);
+        }
+      }
     }
 
     System.out.println("No [child]");
@@ -164,6 +169,9 @@ public class SolrParentChildTest {
     results = solr.getSolrClient().query(queryAll);
     for (SolrDocument result : results.getResults()) {
       System.out.println("  " + result);
+      if (result.hasChildDocuments()) {
+        System.out.println("    " + result.getChildDocuments());
+      }
     }
   }
 
