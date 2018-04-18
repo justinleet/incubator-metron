@@ -62,7 +62,7 @@ public class SolrParentChildTest {
   }
 
   @Before
-  public void setup()
+  public void setupCollections()
       throws IOException, InterruptedException, SolrServerException, KeeperException {
     solr.addCollection(METAALERTS_COLLECTION,
         "../metron-solr/src/test/resources/config/parent/conf");
@@ -86,7 +86,7 @@ public class SolrParentChildTest {
     for (int i = 0; i < 100; ++i) {
       System.out.println("\nRound : " + i);
       if (i != 0) {
-        setup();
+        setupCollections();
       }
       try {
         shouldSearchByNestedAlertMin();
