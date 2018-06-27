@@ -19,16 +19,6 @@ package org.apache.metron.enrichment.parallel;
 
 import com.github.benmanes.caffeine.cache.stats.CacheStats;
 import com.google.common.base.Joiner;
-import org.apache.metron.common.Constants;
-import org.apache.metron.common.configuration.enrichment.SensorEnrichmentConfig;
-import org.apache.metron.common.configuration.enrichment.handler.ConfigHandler;
-import org.apache.metron.common.performance.PerformanceLogger;
-import org.apache.metron.common.utils.MessageUtils;
-import org.apache.metron.enrichment.bolt.CacheKey;
-import org.apache.metron.enrichment.interfaces.EnrichmentAdapter;
-import org.apache.metron.enrichment.utils.EnrichmentUtils;
-import org.json.simple.JSONObject;
-
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -42,6 +32,17 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.BinaryOperator;
 import java.util.function.Supplier;
+import org.apache.metron.common.Constants;
+import org.apache.metron.common.configuration.enrichment.SensorEnrichmentConfig;
+import org.apache.metron.common.configuration.enrichment.handler.ConfigHandler;
+import org.apache.metron.common.parallel.ConcurrencyContext;
+import org.apache.metron.common.parallel.TaskResult;
+import org.apache.metron.common.performance.PerformanceLogger;
+import org.apache.metron.common.utils.MessageUtils;
+import org.apache.metron.enrichment.bolt.CacheKey;
+import org.apache.metron.enrichment.interfaces.EnrichmentAdapter;
+import org.apache.metron.enrichment.utils.EnrichmentUtils;
+import org.json.simple.JSONObject;
 
 /**
  * This is an independent component which will accept a message and a set of enrichment adapters as well as a config which defines
@@ -53,34 +54,34 @@ public class ParallelEnricher {
   private Map<String, EnrichmentAdapter<CacheKey>> enrichmentsByType = new HashMap<>();
   private EnumMap<EnrichmentStrategies, CacheStats> cacheStats = new EnumMap<>(EnrichmentStrategies.class);
 
-  /**
-   * The result of an enrichment.
-   */
-  public static class EnrichmentResult {
-    private JSONObject result;
-    private List<Map.Entry<Object, Throwable>> enrichmentErrors;
-
-    public EnrichmentResult(JSONObject result, List<Map.Entry<Object, Throwable>> enrichmentErrors) {
-      this.result = result;
-      this.enrichmentErrors = enrichmentErrors;
-    }
-
-    /**
-     * The unified fully enriched result.
-     * @return
-     */
-    public JSONObject getResult() {
-      return result;
-    }
-
-    /**
-     * The errors that happened in the course of enriching.
-     * @return
-     */
-    public List<Map.Entry<Object, Throwable>> getEnrichmentErrors() {
-      return enrichmentErrors;
-    }
-  }
+//  /**
+//   * The result of an enrichment.
+//   */
+//  public static class EnrichmentResult {
+//    private JSONObject result;
+//    private List<Map.Entry<Object, Throwable>> enrichmentErrors;
+//
+//    public EnrichmentResult(JSONObject result, List<Map.Entry<Object, Throwable>> enrichmentErrors) {
+//      this.result = result;
+//      this.enrichmentErrors = enrichmentErrors;
+//    }
+//
+//    /**
+//     * The unified fully enriched result.
+//     * @return
+//     */
+//    public JSONObject getResult() {
+//      return result;
+//    }
+//
+//    /**
+//     * The errors that happened in the course of enriching.
+//     * @return
+//     */
+//    public List<Map.Entry<Object, Throwable>> getTaskErrors() {
+//      return enrichmentErrors;
+//    }
+//  }
 
   private ConcurrencyContext concurrencyContext;
 
@@ -112,7 +113,7 @@ public class ParallelEnricher {
    * @param perfLog The performance logger.  We log the performance for this call, the split portion and the enrichment portion.
    * @return the enrichment result
    */
-  public EnrichmentResult apply( JSONObject message
+  public TaskResult apply( JSONObject message
                          , EnrichmentStrategies strategy
                          , SensorEnrichmentConfig config
                          , PerformanceLogger perfLog
@@ -197,10 +198,10 @@ public class ParallelEnricher {
       }
     }
     if(taskList.isEmpty()) {
-      return new EnrichmentResult(message, errors);
+      return new TaskResult(message, errors);
     }
 
-    EnrichmentResult ret = new EnrichmentResult(all(taskList, message, (left, right) -> join(left, right)).get(), errors);
+    TaskResult ret = new TaskResult(all(taskList, message, (left, right) -> join(left, right)).get(), errors);
     message.put(getClass().getSimpleName().toLowerCase() + ".enrich.end.ts", "" + System.currentTimeMillis());
     if(perfLog != null) {
       String key = message.get(Constants.GUID) + "";

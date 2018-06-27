@@ -19,9 +19,13 @@ package org.apache.metron.enrichment.parallel;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.adrianwalker.multilinestring.Multiline;
 import org.apache.metron.common.Constants;
 import org.apache.metron.common.configuration.enrichment.SensorEnrichmentConfig;
+import org.apache.metron.common.parallel.ConcurrencyContext;
 import org.apache.metron.common.utils.JSONUtils;
 import org.apache.metron.enrichment.adapters.stellar.StellarAdapter;
 import org.apache.metron.enrichment.bolt.CacheKey;
@@ -32,10 +36,6 @@ import org.json.simple.JSONObject;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class ParallelEnricherTest {
   /**

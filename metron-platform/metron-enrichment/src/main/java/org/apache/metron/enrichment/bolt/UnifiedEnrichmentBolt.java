@@ -17,6 +17,11 @@
  */
 package org.apache.metron.enrichment.bolt;
 
+import java.lang.invoke.MethodHandles;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import org.apache.metron.common.Constants;
 import org.apache.metron.common.bolt.ConfiguredEnrichmentBolt;
 import org.apache.metron.common.configuration.ConfigurationType;
@@ -24,17 +29,18 @@ import org.apache.metron.common.configuration.enrichment.SensorEnrichmentConfig;
 import org.apache.metron.common.error.MetronError;
 import org.apache.metron.common.message.MessageGetStrategy;
 import org.apache.metron.common.message.MessageGetters;
+import org.apache.metron.common.parallel.TaskResult;
+import org.apache.metron.common.parallel.WorkerPoolStrategies;
 import org.apache.metron.common.performance.PerformanceLogger;
 import org.apache.metron.common.utils.ErrorUtils;
 import org.apache.metron.common.utils.MessageUtils;
 import org.apache.metron.enrichment.adapters.geo.GeoLiteDatabase;
 import org.apache.metron.enrichment.configuration.Enrichment;
 import org.apache.metron.enrichment.interfaces.EnrichmentAdapter;
+import org.apache.metron.enrichment.parallel.ConcurrencyContext;
 import org.apache.metron.enrichment.parallel.EnrichmentContext;
 import org.apache.metron.enrichment.parallel.EnrichmentStrategies;
 import org.apache.metron.enrichment.parallel.ParallelEnricher;
-import org.apache.metron.enrichment.parallel.ConcurrencyContext;
-import org.apache.metron.enrichment.parallel.WorkerPoolStrategies;
 import org.apache.metron.stellar.dsl.Context;
 import org.apache.metron.stellar.dsl.StellarFunctions;
 import org.apache.storm.task.OutputCollector;
@@ -46,12 +52,6 @@ import org.apache.storm.tuple.Values;
 import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.lang.invoke.MethodHandles;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 /**
  * This bolt is a unified enrichment/threat intel bolt.  In contrast to the split/enrich/join
@@ -267,7 +267,7 @@ public class UnifiedEnrichmentBolt extends ConfiguredEnrichmentBolt {
       String guid = getGUID(input, message);
 
       // enrich the message
-      ParallelEnricher.EnrichmentResult result = enricher.apply(message, strategy, config, perfLog);
+      TaskResult result = enricher.apply(message, strategy, config, perfLog);
       JSONObject enriched = result.getResult();
       enriched = strategy.postProcess(enriched, config, enrichmentContext);
 
@@ -276,7 +276,7 @@ public class UnifiedEnrichmentBolt extends ConfiguredEnrichmentBolt {
               input,
               new Values(guid, enriched));
       //and handle each of the errors in turn.  If any adapter errored out, we will have one message per.
-      for(Map.Entry<Object, Throwable> t : result.getEnrichmentErrors()) {
+      for(Map.Entry<Object, Throwable> t : result.getTaskErrors()) {
         LOG.error("[Metron] Unable to enrich message: {}", message, t);
         MetronError error = new MetronError()
                 .withErrorType(strategy.getErrorType())

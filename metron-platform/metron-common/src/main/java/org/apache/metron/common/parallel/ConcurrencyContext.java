@@ -15,38 +15,47 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.metron.enrichment.parallel;
+package org.apache.metron.common.parallel;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import org.apache.metron.enrichment.bolt.CacheKey;
-import org.json.simple.JSONObject;
-import org.slf4j.Logger;
-
-import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
+import org.json.simple.JSONObject;
+import org.slf4j.Logger;
 
 /**
  * This provides the parallel infrastructure, the thread pool and the cache.
  * The threadpool is static and the cache is instance specific.
  */
-public class ConcurrencyContext {
+public class ConcurrencyContext<T> {
   private static Executor executor;
-  private Cache<CacheKey, JSONObject> cache;
+  private Cache<T, JSONObject> cache;
 
-  private static EnumMap<EnrichmentStrategies, ConcurrencyContext> strategyToInfrastructure
-          = new EnumMap<EnrichmentStrategies, ConcurrencyContext>(EnrichmentStrategies.class) {{
-    for(EnrichmentStrategies e : EnrichmentStrategies.values()) {
-      put(e, new ConcurrencyContext());
+  // TODO Using Object here this seems insanely sketchy
+  private HashMap<Object, ConcurrencyContext> contextKeyToInfrastructure =
+      new HashMap<>();
+
+//  private static EnumMap<EnrichmentStrategies, ConcurrencyContext> strategyToInfrastructure
+//          = new EnumMap<EnrichmentStrategies, ConcurrencyContext>(EnrichmentStrategies.class) {{
+//    for(EnrichmentStrategies e : EnrichmentStrategies.values()) {
+//      put(e, new ConcurrencyContext());
+//    }
+//  }};
+
+  // TODO we can theoretically know what the keys are, because it'll be preconfigured.
+  public ConcurrencyContext get(Object contextKey) {
+    ConcurrencyContext context = contextKeyToInfrastructure.get(contextKey);
+    if(context == null) {
+      context = new ConcurrencyContext();
+      contextKeyToInfrastructure.put(contextKey, context);
     }
-  }};
-
-  public static ConcurrencyContext get(EnrichmentStrategies strategy) {
-    return strategyToInfrastructure.get(strategy);
+    return context;
   }
 
-  protected ConcurrencyContext() { }
+  // TODO drop back down to protected if possible when ParallelTasker is cleaned up
+  public ConcurrencyContext() { }
 
   /*
    * Initialize the thread pool and cache.  The threadpool is static and the cache is per strategy.
@@ -75,7 +84,7 @@ public class ConcurrencyContext {
       if (log != null) {
         log.info("Creating new cache with maximum size {}, and expiration after write of {} minutes", maxCacheSize, maxTimeRetain);
       }
-      Caffeine builder = Caffeine.newBuilder().maximumSize(maxCacheSize)
+      Caffeine<Object, Object> builder = Caffeine.newBuilder().maximumSize(maxCacheSize)
                            .expireAfterWrite(maxTimeRetain, TimeUnit.MINUTES)
                            .executor(executor)
                          ;
@@ -90,7 +99,7 @@ public class ConcurrencyContext {
     return executor;
   }
 
-  public Cache<CacheKey, JSONObject> getCache() {
+  public Cache<T, JSONObject> getCache() {
     return cache;
   }
 }
