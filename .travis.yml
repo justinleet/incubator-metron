@@ -33,7 +33,7 @@ before_install:
   - npm config set prefix $HOME/.npm-prefix --global
 
 install:
-  - time mvn -q test --projects metron-interface/metron-alerts
+  - time mvn -X -q test --projects metron-interface/metron-alerts
 
 before_cache:
   - rm -rf $HOME/.m2/repository/org/apache/metron
