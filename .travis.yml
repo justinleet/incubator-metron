@@ -33,11 +33,9 @@ before_install:
   - export PATH=$M2_HOME/bin:$PATH
   - npm config set cache $HOME/.npm-cache --global
   - npm config set prefix $HOME/.npm-prefix --global
-  - # start your web application and listen on `localhost`
-  - google-chrome-stable --headless --disable-gpu --remote-debugging-port=9222 http://localhost &
 
 install:
-  - time mvn -X -q test --projects metron-interface/metron-alerts
+  - time mvn -q test --projects metron-interface/metron-alerts
 
 before_cache:
   - rm -rf $HOME/.m2/repository/org/apache/metron
