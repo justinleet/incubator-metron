@@ -24,7 +24,7 @@ env:
   - SCRIPTS="mvn surefire:test@integration-tests"
   - SCRIPTS="mvn test --projects metron-interface/metron-config,metron-interface/metron-alerts"
   # Run two shorter commands in the same build
-  - SCRIPTS="(\"mvn site -q\" \"./dev-utilities/build-utils/verify_licenses.sh\")"
+  - SCRIPTS="(\"mvn site -q\" \"./dev-utilities/build-utils/verify_licenses.sh\")" SKIP_INSTALL=true
 
 install: true
 language: java
@@ -42,7 +42,7 @@ install:
   - time mvn install -T 2C -q -DskipTests=true -Dmaven.javadoc.skip=true -B -V
 
 script:
-  - for script in "${SCRIPTS[@]}"; do com=("time" "${script[@]}"); echo "${com[@]}"; ${com[@]}; done
+  - for script in "${SCRIPTS[@]}"; do com=("${script[@]}"); echo "${com[@]}"; time ${com[@]}; done
 
 matrix:
   fast_finish: true
@@ -58,3 +58,8 @@ cache:
   - metron-interface/metron-config/node_modules
   - $HOME/.m2
   - $HOME/.npm
+
+stages:
+  - name: install
+    # require the branch name to be master (note for PRs this is the base branch name)
+    if: env(SKIP_INSTALL) = true
