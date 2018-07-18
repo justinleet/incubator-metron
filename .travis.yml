@@ -61,4 +61,4 @@ cache:
 
 stages:
   - name: install
-    if: env(SKIP_INSTALL) != "true"
+    if: env(SKIP_INSTALL) != true
