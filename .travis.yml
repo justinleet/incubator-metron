@@ -62,4 +62,4 @@ cache:
 stages:
   - name: install
     # require the branch name to be master (note for PRs this is the base branch name)
-    if: env(SKIP_INSTALL) = true
+    if: env(SKIP_INSTALL) != true
