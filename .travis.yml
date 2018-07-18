@@ -24,7 +24,7 @@ env:
   - SCRIPTS="mvn surefire:test@integration-tests"
   - SCRIPTS="mvn test --projects metron-interface/metron-config,metron-interface/metron-alerts"
   # Run two shorter commands in the same build
-  - SCRIPTS="(\"mvn site -q\" \"./dev-utilities/build-utils/verify_licenses.sh\")" SKIP_INSTALL=true
+  - SCRIPTS="(\"mvn site -q\" \"./dev-utilities/build-utils/verify_licenses.sh\")" SKIP_INSTALL="true"
 
 install: true
 language: java
@@ -61,5 +61,4 @@ cache:
 
 stages:
   - name: install
-    # require the branch name to be master (note for PRs this is the base branch name)
-    if: env(SKIP_INSTALL) != true
+    if: env(SKIP_INSTALL) != "true"
