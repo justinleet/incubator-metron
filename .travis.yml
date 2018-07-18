@@ -20,10 +20,10 @@ addons:
   chrome: stable
 
 env:
-  - SCRIPT="mvn surefire:test@unit-tests -T 2C"
-  - SCRIPT="mvn surefire:test@integration-tests"
-  - SCRIPT="mvn test --projects metron-interface/metron-config,metron-interface/metron-alerts"
-  - SCRIPT="./dev-utilities/build-utils/verify_licenses.sh"
+  - SCRIPTS="time mvn surefire:test@unit-tests -T 2C"
+  - SCRIPTS="time mvn surefire:test@integration-tests"
+  - SCRIPTS="time mvn test --projects metron-interface/metron-config,metron-interface/metron-alerts"
+  - SCRIPTS=("time mvn site -q" "time ./dev-utilities/build-utils/verify_licenses.sh")
 
 install: true
 language: java
@@ -38,10 +38,10 @@ before_install:
   - npm config set prefix $HOME/.npm-prefix --global
 
 install:
-  - time mvn install -T 2C -q -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+#  - time mvn install -T 2C -q -DskipTests=true -Dmaven.javadoc.skip=true -B -V
 
 script:
-  - time $SCRIPT
+  - for script in "${SCRIPTS[@]}"; do $script; done
 
 matrix:
   fast_finish: true
