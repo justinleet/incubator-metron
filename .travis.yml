@@ -30,6 +30,11 @@ install: true
 language: java
 jdk:
   - oraclejdk8
+
+stages:
+  - name: install
+    if: env(SKIP_INSTALL) != true
+
 before_install:
   - wget https://archive.apache.org/dist/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.zip
   - unzip -qq apache-maven-3.3.9-bin.zip
@@ -59,6 +64,3 @@ cache:
   - $HOME/.m2
   - $HOME/.npm
 
-stages:
-  - name: install
-    if: env(SKIP_INSTALL) != true
