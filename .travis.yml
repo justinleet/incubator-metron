@@ -24,7 +24,7 @@ env:
   - SCRIPTS="mvn surefire:test@integration-tests"
   - SCRIPTS="mvn test --projects metron-interface/metron-config,metron-interface/metron-alerts"
   # Run two shorter commands in the same build
-  - SCRIPTS=("mvn site -q" "./dev-utilities/build-utils/verify_licenses.sh")
+  - SCRIPTS="(\"mvn site -q\" \"./dev-utilities/build-utils/verify_licenses.sh\")"
 
 install: true
 language: java
