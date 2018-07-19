@@ -43,7 +43,7 @@ install:
   - time mvn install -T 2C -q -DskipTests=true -Dmaven.javadoc.skip=true -B -V
 
 script:
-  - for script in "${SCRIPTS[@]}"; do com=("time" "${script[@]}"); echo "${com[@]}"; ${com[@]}; done
+  - for script in "${SCRIPTS[@]}"; do com=("time" "${script[@]}"); echo "Running ${com[@]}"; ${com[@]}; done
 
 matrix:
   fast_finish: true
