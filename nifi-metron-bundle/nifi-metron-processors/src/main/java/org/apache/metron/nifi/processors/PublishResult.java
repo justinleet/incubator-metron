@@ -19,38 +19,38 @@ package org.apache.metron.nifi.processors;
 
 import java.util.Collection;
 import java.util.Collections;
-
 import org.apache.nifi.flowfile.FlowFile;
 
 public interface PublishResult {
-    Collection<FlowFile> getSuccessfulFlowFiles();
 
-    Collection<FlowFile> getFailedFlowFiles();
+  Collection<FlowFile> getSuccessfulFlowFiles();
 
-    int getSuccessfulMessageCount(FlowFile flowFile);
+  Collection<FlowFile> getFailedFlowFiles();
 
-    Exception getReasonForFailure(FlowFile flowFile);
+  int getSuccessfulMessageCount(FlowFile flowFile);
+
+  Exception getReasonForFailure(FlowFile flowFile);
 
 
-    public static final PublishResult EMPTY = new PublishResult() {
-        @Override
-        public Collection<FlowFile> getSuccessfulFlowFiles() {
-            return Collections.emptyList();
-        }
+  public static final PublishResult EMPTY = new PublishResult() {
+    @Override
+    public Collection<FlowFile> getSuccessfulFlowFiles() {
+      return Collections.emptyList();
+    }
 
-        @Override
-        public Collection<FlowFile> getFailedFlowFiles() {
-            return Collections.emptyList();
-        }
+    @Override
+    public Collection<FlowFile> getFailedFlowFiles() {
+      return Collections.emptyList();
+    }
 
-        @Override
-        public int getSuccessfulMessageCount(FlowFile flowFile) {
-            return 0;
-        }
+    @Override
+    public int getSuccessfulMessageCount(FlowFile flowFile) {
+      return 0;
+    }
 
-        @Override
-        public Exception getReasonForFailure(FlowFile flowFile) {
-            return null;
-        }
-    };
+    @Override
+    public Exception getReasonForFailure(FlowFile flowFile) {
+      return null;
+    }
+  };
 }

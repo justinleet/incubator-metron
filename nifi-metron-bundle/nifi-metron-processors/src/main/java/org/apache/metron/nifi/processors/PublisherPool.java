@@ -21,78 +21,80 @@ import java.io.Closeable;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.nifi.logging.ComponentLog;
 
 public class PublisherPool implements Closeable {
-    private final ComponentLog logger;
-    private final BlockingQueue<PublisherLease> publisherQueue;
-    private final Map<String, Object> kafkaProperties;
-    private final int maxMessageSize;
-    private final long maxAckWaitMillis;
 
-    private volatile boolean closed = false;
+  private final ComponentLog logger;
+  private final BlockingQueue<PublisherLease> publisherQueue;
+  private final Map<String, Object> kafkaProperties;
+  private final int maxMessageSize;
+  private final long maxAckWaitMillis;
 
-    PublisherPool(final Map<String, Object> kafkaProperties, final ComponentLog logger, final int maxMessageSize, final long maxAckWaitMillis) {
-        this.logger = logger;
-        this.publisherQueue = new LinkedBlockingQueue<>();
-        this.kafkaProperties = kafkaProperties;
-        this.maxMessageSize = maxMessageSize;
-        this.maxAckWaitMillis = maxAckWaitMillis;
+  private volatile boolean closed = false;
+
+  PublisherPool(final Map<String, Object> kafkaProperties, final ComponentLog logger,
+      final int maxMessageSize, final long maxAckWaitMillis) {
+    this.logger = logger;
+    this.publisherQueue = new LinkedBlockingQueue<>();
+    this.kafkaProperties = kafkaProperties;
+    this.maxMessageSize = maxMessageSize;
+    this.maxAckWaitMillis = maxAckWaitMillis;
+  }
+
+  public PublisherLease obtainPublisher() {
+    if (isClosed()) {
+      throw new IllegalStateException("Connection Pool is closed");
     }
 
-    public PublisherLease obtainPublisher() {
-        if (isClosed()) {
-            throw new IllegalStateException("Connection Pool is closed");
+    PublisherLease lease = publisherQueue.poll();
+    if (lease != null) {
+      return lease;
+    }
+
+    lease = createLease();
+    return lease;
+  }
+
+  private PublisherLease createLease() {
+    final Producer<byte[], byte[]> producer = new KafkaProducer<>(kafkaProperties);
+    final PublisherLease lease = new PublisherLease(producer, maxMessageSize, maxAckWaitMillis,
+        logger) {
+      @Override
+      public void close() {
+        if (isPoisoned() || isClosed()) {
+          super.close();
+        } else {
+          publisherQueue.offer(this);
         }
+      }
+    };
 
-        PublisherLease lease = publisherQueue.poll();
-        if (lease != null) {
-            return lease;
-        }
+    return lease;
+  }
 
-        lease = createLease();
-        return lease;
+  public synchronized boolean isClosed() {
+    return closed;
+  }
+
+  @Override
+  public synchronized void close() {
+    closed = true;
+
+    PublisherLease lease;
+    while ((lease = publisherQueue.poll()) != null) {
+      lease.close();
     }
+  }
 
-    private PublisherLease createLease() {
-        final Producer<byte[], byte[]> producer = new KafkaProducer<>(kafkaProperties);
-        final PublisherLease lease = new PublisherLease(producer, maxMessageSize, maxAckWaitMillis, logger) {
-            @Override
-            public void close() {
-                if (isPoisoned() || isClosed()) {
-                    super.close();
-                } else {
-                    publisherQueue.offer(this);
-                }
-            }
-        };
-
-        return lease;
-    }
-
-    public synchronized boolean isClosed() {
-        return closed;
-    }
-
-    @Override
-    public synchronized void close() {
-        closed = true;
-
-        PublisherLease lease;
-        while ((lease = publisherQueue.poll()) != null) {
-            lease.close();
-        }
-    }
-
-    /**
-     * Returns the number of leases that are currently available
-     *
-     * @return the number of leases currently available
-     */
-    protected int available() {
-        return publisherQueue.size();
-    }
+  /**
+   * Returns the number of leases that are currently available
+   *
+   * @return the number of leases currently available
+   */
+  protected int available() {
+    return publisherQueue.size();
+  }
 }

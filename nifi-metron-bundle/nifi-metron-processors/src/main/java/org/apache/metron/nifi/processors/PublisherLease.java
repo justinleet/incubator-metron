@@ -24,7 +24,6 @@ import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
-
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -42,170 +41,182 @@ import org.apache.nifi.stream.io.exception.TokenTooLargeException;
 import org.apache.nifi.stream.io.util.StreamDemarcator;
 
 public class PublisherLease implements Closeable {
-    private final ComponentLog logger;
-    private final Producer<byte[], byte[]> producer;
-    private final int maxMessageSize;
-    private final long maxAckWaitMillis;
-    private volatile boolean poisoned = false;
-    private final AtomicLong messagesSent = new AtomicLong(0L);
 
-    private InFlightMessageTracker tracker;
+  private final ComponentLog logger;
+  private final Producer<byte[], byte[]> producer;
+  private final int maxMessageSize;
+  private final long maxAckWaitMillis;
+  private volatile boolean poisoned = false;
+  private final AtomicLong messagesSent = new AtomicLong(0L);
 
-    public PublisherLease(final Producer<byte[], byte[]> producer, final int maxMessageSize, final long maxAckWaitMillis, final ComponentLog logger) {
-        this.producer = producer;
-        this.maxMessageSize = maxMessageSize;
-        this.logger = logger;
-        this.maxAckWaitMillis = maxAckWaitMillis;
+  private InFlightMessageTracker tracker;
+
+  public PublisherLease(final Producer<byte[], byte[]> producer, final int maxMessageSize,
+      final long maxAckWaitMillis, final ComponentLog logger) {
+    this.producer = producer;
+    this.maxMessageSize = maxMessageSize;
+    this.logger = logger;
+    this.maxAckWaitMillis = maxAckWaitMillis;
+  }
+
+  protected void poison() {
+    this.poisoned = true;
+  }
+
+  public boolean isPoisoned() {
+    return poisoned;
+  }
+
+  void publish(final FlowFile flowFile, final InputStream flowFileContent, final byte[] messageKey,
+      final byte[] demarcatorBytes, final String topic) throws IOException {
+    if (tracker == null) {
+      tracker = new InFlightMessageTracker();
     }
 
-    protected void poison() {
-        this.poisoned = true;
+    try {
+      byte[] messageContent;
+      if (demarcatorBytes == null || demarcatorBytes.length == 0) {
+        if (flowFile.getSize() > maxMessageSize) {
+          tracker.fail(flowFile, new TokenTooLargeException(
+              "A message in the stream exceeds the maximum allowed message size of "
+                  + maxMessageSize + " bytes."));
+          return;
+        }
+        // Send FlowFile content as it is, to support sending 0 byte message.
+        messageContent = new byte[(int) flowFile.getSize()];
+        StreamUtils.fillBuffer(flowFileContent, messageContent);
+        publish(flowFile, messageKey, messageContent, topic, tracker);
+        return;
+      }
+
+      try (final StreamDemarcator demarcator = new StreamDemarcator(flowFileContent,
+          demarcatorBytes, maxMessageSize)) {
+        while ((messageContent = demarcator.nextToken()) != null) {
+          publish(flowFile, messageKey, messageContent, topic, tracker);
+
+          if (tracker.isFailed(flowFile)) {
+            // If we have a failure, don't try to send anything else.
+            return;
+          }
+        }
+        tracker.trackEmpty(flowFile);
+      } catch (final TokenTooLargeException ttle) {
+        tracker.fail(flowFile, ttle);
+      }
+    } catch (final Exception e) {
+      tracker.fail(flowFile, e);
+      poison();
+      throw e;
+    }
+  }
+
+  void publish(final FlowFile flowFile, final RecordSet recordSet,
+      final RecordSetWriterFactory writerFactory, final RecordSchema schema,
+      final byte[] messageKey, final String topic) throws IOException {
+    if (tracker == null) {
+      tracker = new InFlightMessageTracker();
     }
 
-    public boolean isPoisoned() {
-        return poisoned;
-    }
+    final ByteArrayOutputStream baos = new ByteArrayOutputStream(1024);
 
-    void publish(final FlowFile flowFile, final InputStream flowFileContent, final byte[] messageKey, final byte[] demarcatorBytes, final String topic) throws IOException {
-        if (tracker == null) {
-            tracker = new InFlightMessageTracker();
+    Record record;
+    int recordCount = 0;
+
+    try {
+      while ((record = recordSet.next()) != null) {
+        recordCount++;
+        baos.reset();
+
+        try (final RecordSetWriter writer = writerFactory.createWriter(logger, schema, baos)) {
+          writer.write(record);
+          writer.flush();
         }
 
-        try {
-            byte[] messageContent;
-            if (demarcatorBytes == null || demarcatorBytes.length == 0) {
-                if (flowFile.getSize() > maxMessageSize) {
-                    tracker.fail(flowFile, new TokenTooLargeException("A message in the stream exceeds the maximum allowed message size of " + maxMessageSize + " bytes."));
-                    return;
-                }
-                // Send FlowFile content as it is, to support sending 0 byte message.
-                messageContent = new byte[(int) flowFile.getSize()];
-                StreamUtils.fillBuffer(flowFileContent, messageContent);
-                publish(flowFile, messageKey, messageContent, topic, tracker);
-                return;
-            }
+        final byte[] messageContent = baos.toByteArray();
 
-            try (final StreamDemarcator demarcator = new StreamDemarcator(flowFileContent, demarcatorBytes, maxMessageSize)) {
-                while ((messageContent = demarcator.nextToken()) != null) {
-                    publish(flowFile, messageKey, messageContent, topic, tracker);
+        publish(flowFile, messageKey, messageContent, topic, tracker);
 
-                    if (tracker.isFailed(flowFile)) {
-                        // If we have a failure, don't try to send anything else.
-                        return;
-                    }
-                }
-                tracker.trackEmpty(flowFile);
-            } catch (final TokenTooLargeException ttle) {
-                tracker.fail(flowFile, ttle);
-            }
-        } catch (final Exception e) {
-            tracker.fail(flowFile, e);
-            poison();
-            throw e;
+        if (tracker.isFailed(flowFile)) {
+          // If we have a failure, don't try to send anything else.
+          return;
         }
+      }
+
+      if (recordCount == 0) {
+        tracker.trackEmpty(flowFile);
+      }
+    } catch (final TokenTooLargeException ttle) {
+      tracker.fail(flowFile, ttle);
+    } catch (final SchemaNotFoundException snfe) {
+      throw new IOException(snfe);
+    } catch (final Exception e) {
+      tracker.fail(flowFile, e);
+      poison();
+      throw e;
+    }
+  }
+
+  protected void publish(final FlowFile flowFile, final byte[] messageKey,
+      final byte[] messageContent, final String topic, final InFlightMessageTracker tracker) {
+    final ProducerRecord<byte[], byte[]> record = new ProducerRecord<>(topic, null, messageKey,
+        messageContent);
+    producer.send(record, new Callback() {
+      @Override
+      public void onCompletion(final RecordMetadata metadata, final Exception exception) {
+        if (exception == null) {
+          tracker.incrementAcknowledgedCount(flowFile);
+        } else {
+          tracker.fail(flowFile, exception);
+          poison();
+        }
+      }
+    });
+
+    messagesSent.incrementAndGet();
+    tracker.incrementSentCount(flowFile);
+  }
+
+
+  public PublishResult complete() {
+    if (tracker == null) {
+      if (messagesSent.get() == 0L) {
+        return PublishResult.EMPTY;
+      }
+
+      throw new IllegalStateException(
+          "Cannot complete publishing to Kafka because Publisher Lease was already closed");
     }
 
-    void publish(final FlowFile flowFile, final RecordSet recordSet, final RecordSetWriterFactory writerFactory, final RecordSchema schema,
-        final byte[] messageKey, final String topic) throws IOException {
-        if (tracker == null) {
-            tracker = new InFlightMessageTracker();
-        }
+    producer.flush();
 
-        final ByteArrayOutputStream baos = new ByteArrayOutputStream(1024);
+    try {
+      tracker.awaitCompletion(maxAckWaitMillis);
+      return tracker.createPublishResult();
+    } catch (final InterruptedException e) {
+      logger.warn(
+          "Interrupted while waiting for an acknowledgement from Kafka; some FlowFiles may be transferred to 'failure' even though they were received by Kafka");
+      Thread.currentThread().interrupt();
+      return tracker.failOutstanding(e);
+    } catch (final TimeoutException e) {
+      logger.warn(
+          "Timed out while waiting for an acknowledgement from Kafka; some FlowFiles may be transferred to 'failure' even though they were received by Kafka");
+      return tracker.failOutstanding(e);
+    } finally {
+      tracker = null;
+    }
+  }
 
-        Record record;
-        int recordCount = 0;
+  @Override
+  public void close() {
+    producer.close(maxAckWaitMillis, TimeUnit.MILLISECONDS);
+    tracker = null;
+  }
 
-        try {
-            while ((record = recordSet.next()) != null) {
-                recordCount++;
-                baos.reset();
-
-                try (final RecordSetWriter writer = writerFactory.createWriter(logger, schema, baos)) {
-                    writer.write(record);
-                    writer.flush();
-                }
-
-                final byte[] messageContent = baos.toByteArray();
-                
-                publish(flowFile, messageKey, messageContent, topic, tracker);
-
-                if (tracker.isFailed(flowFile)) {
-                    // If we have a failure, don't try to send anything else.
-                    return;
-                }
-            }
-
-            if (recordCount == 0) {
-                tracker.trackEmpty(flowFile);
-            }
-        } catch (final TokenTooLargeException ttle) {
-            tracker.fail(flowFile, ttle);
-        } catch (final SchemaNotFoundException snfe) {
-            throw new IOException(snfe);
-        } catch (final Exception e) {
-            tracker.fail(flowFile, e);
-            poison();
-            throw e;
-        }
+  public InFlightMessageTracker getTracker() {
+    if (tracker == null) {
+      tracker = new InFlightMessageTracker();
     }
 
-    protected void publish(final FlowFile flowFile, final byte[] messageKey, final byte[] messageContent, final String topic, final InFlightMessageTracker tracker) {
-        final ProducerRecord<byte[], byte[]> record = new ProducerRecord<>(topic, null, messageKey, messageContent);
-        producer.send(record, new Callback() {
-            @Override
-            public void onCompletion(final RecordMetadata metadata, final Exception exception) {
-                if (exception == null) {
-                    tracker.incrementAcknowledgedCount(flowFile);
-                } else {
-                    tracker.fail(flowFile, exception);
-                    poison();
-                }
-            }
-        });
-
-        messagesSent.incrementAndGet();
-        tracker.incrementSentCount(flowFile);
-    }
-
-
-    public PublishResult complete() {
-        if (tracker == null) {
-            if (messagesSent.get() == 0L) {
-                return PublishResult.EMPTY;
-            }
-
-            throw new IllegalStateException("Cannot complete publishing to Kafka because Publisher Lease was already closed");
-        }
-
-        producer.flush();
-
-        try {
-            tracker.awaitCompletion(maxAckWaitMillis);
-            return tracker.createPublishResult();
-        } catch (final InterruptedException e) {
-            logger.warn("Interrupted while waiting for an acknowledgement from Kafka; some FlowFiles may be transferred to 'failure' even though they were received by Kafka");
-            Thread.currentThread().interrupt();
-            return tracker.failOutstanding(e);
-        } catch (final TimeoutException e) {
-            logger.warn("Timed out while waiting for an acknowledgement from Kafka; some FlowFiles may be transferred to 'failure' even though they were received by Kafka");
-            return tracker.failOutstanding(e);
-        } finally {
-            tracker = null;
-        }
-    }
-
-    @Override
-    public void close() {
-        producer.close(maxAckWaitMillis, TimeUnit.MILLISECONDS);
-        tracker = null;
-    }
-
-    public InFlightMessageTracker getTracker() {
-        if (tracker == null) {
-            tracker = new InFlightMessageTracker();
-        }
-
-        return tracker;
-    }
+    return tracker;
+  }
 }

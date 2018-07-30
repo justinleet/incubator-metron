@@ -16,40 +16,38 @@
  */
 package org.apache.metron.nifi.processors;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
-
 import org.apache.kafka.common.errors.SerializationException;
 import org.apache.kafka.common.serialization.Serializer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 public class MetronMetadataSerializer implements Serializer<Map<String, String>> {
 
-	public MetronMetadataSerializer() {
-	}
+  public MetronMetadataSerializer() {
+  }
 
-	private ObjectMapper objectMapper;
+  private ObjectMapper objectMapper;
 
-	@Override
-	public void configure(Map<String, ?> configs, boolean isKey) {
-		this.objectMapper = new ObjectMapper();
-	}
+  @Override
+  public void configure(Map<String, ?> configs, boolean isKey) {
+    this.objectMapper = new ObjectMapper();
+  }
 
-	@Override
-	public byte[] serialize(String topic, Map<String, String> data) {
-		if (data == null || data.isEmpty()) {
-			return null;
-		}
-		try {
-			return objectMapper.writeValueAsBytes(data);
-		} catch (Exception e) {
-			throw new SerializationException("Error serializing JSON message", e);
-		}
+  @Override
+  public byte[] serialize(String topic, Map<String, String> data) {
+    if (data == null || data.isEmpty()) {
+      return null;
+    }
+    try {
+      return objectMapper.writeValueAsBytes(data);
+    } catch (Exception e) {
+      throw new SerializationException("Error serializing JSON message", e);
+    }
 
-	}
+  }
 
-	@Override
-	public void close() {
-	}
+  @Override
+  public void close() {
+  }
 
 }

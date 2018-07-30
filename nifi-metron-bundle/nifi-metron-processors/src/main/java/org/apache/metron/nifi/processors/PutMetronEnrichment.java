@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
-
 import org.apache.metron.dataloads.extractor.Extractor;
 import org.apache.metron.dataloads.extractor.ExtractorHandler;
 import org.apache.metron.enrichment.lookup.LookupKV;
@@ -52,116 +51,129 @@ import org.apache.nifi.processor.util.StandardValidators;
 
 @EventDriven
 @InputRequirement(InputRequirement.Requirement.INPUT_REQUIRED)
-@Tags({ "metorn", "enrichment", "put" })
+@Tags({"metorn", "enrichment", "put"})
 @CapabilityDescription("Processes incoming flow files through a Metron Enrichment Loader, including transformation in Metron")
 public class PutMetronEnrichment extends AbstractProcessor {
 
-	public static final PropertyDescriptor METRON_EXTRACTOR = new PropertyDescriptor.Builder().name("METRON_EXTRACTOR")
-			.displayName("Extractor Config").description("Configuration for the Metron extractor in json format")
-			.addValidator(StandardValidators.NON_EMPTY_VALIDATOR).required(true).build();
+  public static final PropertyDescriptor METRON_EXTRACTOR = new PropertyDescriptor.Builder()
+      .name("METRON_EXTRACTOR")
+      .displayName("Extractor Config")
+      .description("Configuration for the Metron extractor in json format")
+      .addValidator(StandardValidators.NON_EMPTY_VALIDATOR).required(true).build();
 
-	protected static final PropertyDescriptor HBASE_CLIENT_SERVICE = new PropertyDescriptor.Builder()
-			.name("HBase Client Service").description("Specifies the Controller Service to use for accessing HBase.")
-			.required(true).identifiesControllerService(HBaseClientService.class).build();
-	protected static final PropertyDescriptor TABLE_NAME = new PropertyDescriptor.Builder().name("Table Name")
-			.description("The name of the HBase Table to put data into").required(true)
-			.expressionLanguageSupported(true).addValidator(StandardValidators.NON_EMPTY_VALIDATOR).build();
-	protected static final PropertyDescriptor COLUMN_FAMILY = new PropertyDescriptor.Builder().name("Column Family")
-			.description("The Column Family to use when inserting data into HBase").required(true)
-			.expressionLanguageSupported(true).addValidator(StandardValidators.NON_EMPTY_VALIDATOR).build();
+  protected static final PropertyDescriptor HBASE_CLIENT_SERVICE = new PropertyDescriptor.Builder()
+      .name("HBase Client Service")
+      .description("Specifies the Controller Service to use for accessing HBase.")
+      .required(true).identifiesControllerService(HBaseClientService.class).build();
+  protected static final PropertyDescriptor TABLE_NAME = new PropertyDescriptor.Builder()
+      .name("Table Name")
+      .description("The name of the HBase Table to put data into").required(true)
+      .expressionLanguageSupported(true).addValidator(StandardValidators.NON_EMPTY_VALIDATOR)
+      .build();
+  protected static final PropertyDescriptor COLUMN_FAMILY = new PropertyDescriptor.Builder()
+      .name("Column Family")
+      .description("The Column Family to use when inserting data into HBase").required(true)
+      .expressionLanguageSupported(true).addValidator(StandardValidators.NON_EMPTY_VALIDATOR)
+      .build();
 
-	public static final Relationship REL_SUCCESS = new Relationship.Builder().name("success")
-			.description("A FlowFile is routed to this relationship after it has been successfully stored in HBase")
-			.build();
-	public static final Relationship REL_FAILURE = new Relationship.Builder().name("failure")
-			.description("A FlowFile is routed to this relationship if it cannot be sent to HBase").build();
+  public static final Relationship REL_SUCCESS = new Relationship.Builder().name("success")
+      .description(
+          "A FlowFile is routed to this relationship after it has been successfully stored in HBase")
+      .build();
+  public static final Relationship REL_FAILURE = new Relationship.Builder().name("failure")
+      .description("A FlowFile is routed to this relationship if it cannot be sent to HBase")
+      .build();
 
-	static final byte[] EMPTY = "".getBytes();
+  static final byte[] EMPTY = "".getBytes();
 
-	protected HBaseClientService clientService;
+  protected HBaseClientService clientService;
 
-	@OnScheduled
-	public void onScheduled(final ProcessContext context) {
-		clientService = context.getProperty(HBASE_CLIENT_SERVICE).asControllerService(HBaseClientService.class);
-	}
+  @OnScheduled
+  public void onScheduled(final ProcessContext context) {
+    clientService = context.getProperty(HBASE_CLIENT_SERVICE)
+        .asControllerService(HBaseClientService.class);
+  }
 
-	@Override
-	public final List<PropertyDescriptor> getSupportedPropertyDescriptors() {
-		final List<PropertyDescriptor> properties = new ArrayList<>();
-		properties.add(METRON_EXTRACTOR);
-		properties.add(HBASE_CLIENT_SERVICE);
-		properties.add(TABLE_NAME);
-		properties.add(COLUMN_FAMILY);
-		return properties;
-	}
+  @Override
+  public final List<PropertyDescriptor> getSupportedPropertyDescriptors() {
+    final List<PropertyDescriptor> properties = new ArrayList<>();
+    properties.add(METRON_EXTRACTOR);
+    properties.add(HBASE_CLIENT_SERVICE);
+    properties.add(TABLE_NAME);
+    properties.add(COLUMN_FAMILY);
+    return properties;
+  }
 
-	@Override
-	public Set<Relationship> getRelationships() {
-		final Set<Relationship> rels = new HashSet<>();
-		rels.add(REL_SUCCESS);
-		rels.add(REL_FAILURE);
-		return rels;
-	}
+  @Override
+  public Set<Relationship> getRelationships() {
+    final Set<Relationship> rels = new HashSet<>();
+    rels.add(REL_SUCCESS);
+    rels.add(REL_FAILURE);
+    return rels;
+  }
 
-	@SuppressWarnings("rawtypes")
-	@Override
-	public void onTrigger(ProcessContext context, ProcessSession session) throws ProcessException {
-		boolean failed = false;
+  @SuppressWarnings("rawtypes")
+  @Override
+  public void onTrigger(ProcessContext context, ProcessSession session) throws ProcessException {
+    boolean failed = false;
 
-		FlowFile flowFile = session.get();
-		if (flowFile == null) {
-			return;
-		}
-		final String tableName = context.getProperty(TABLE_NAME).evaluateAttributeExpressions(flowFile).getValue();
-		final byte[] columnFamily = context.getProperty(COLUMN_FAMILY).evaluateAttributeExpressions(flowFile).getValue()
-				.getBytes();
+    FlowFile flowFile = session.get();
+    if (flowFile == null) {
+      return;
+    }
+    final String tableName = context.getProperty(TABLE_NAME).evaluateAttributeExpressions(flowFile)
+        .getValue();
+    final byte[] columnFamily = context.getProperty(COLUMN_FAMILY)
+        .evaluateAttributeExpressions(flowFile).getValue()
+        .getBytes();
 
-		Collection<LookupKV> extracts = new ArrayList<LookupKV>();
-		try {
-			// process the Metron extractor config
-			final ExtractorHandler handler = ExtractorHandler.load(context.getProperty(METRON_EXTRACTOR).getValue());
-			final Extractor e = handler.getExtractor();
-			session.read(flowFile, in -> {
-				try (final BufferedReader bufferedIn = new BufferedReader(
-						new InputStreamReader(in, Charset.defaultCharset()))) {
-					// extract with Metron, line by line, and store all found KV pairs
-					for (LookupKV extract : e.extract(bufferedIn.readLine())) {
-						extracts.add(extract);
-					}
-				}
-			});
-		} catch (IOException e) {
-			failed = true;
-			getLogger().error("Metron Extraction Error", e);
-		}
+    Collection<LookupKV> extracts = new ArrayList<LookupKV>();
+    try {
+      // process the Metron extractor config
+      final ExtractorHandler handler = ExtractorHandler
+          .load(context.getProperty(METRON_EXTRACTOR).getValue());
+      final Extractor e = handler.getExtractor();
+      session.read(flowFile, in -> {
+        try (final BufferedReader bufferedIn = new BufferedReader(
+            new InputStreamReader(in, Charset.defaultCharset()))) {
+          // extract with Metron, line by line, and store all found KV pairs
+          for (LookupKV extract : e.extract(bufferedIn.readLine())) {
+            extracts.add(extract);
+          }
+        }
+      });
+    } catch (IOException e) {
+      failed = true;
+      getLogger().error("Metron Extraction Error", e);
+    }
 
-		if (failed) {
-			flowFile = session.penalize(flowFile);
-			return;
-		}
+    if (failed) {
+      flowFile = session.penalize(flowFile);
+      return;
+    }
 
-		Collection<PutFlowFile> puts = StreamSupport.stream(extracts.spliterator(), true).map(x -> {
-			LookupKey key = x.getKey();
-			LookupValue value = x.getValue();
-			Collection<PutColumn> columns = StreamSupport.stream(value.toColumns().spliterator(), false)
-					.map(column -> new PutColumn(columnFamily, column.getKey(), column.getValue()))
-					.collect(Collectors.toList());
-			return new PutFlowFile(tableName, key.toBytes(), columns, null);
+    Collection<PutFlowFile> puts = StreamSupport.stream(extracts.spliterator(), true).map(x -> {
+      LookupKey key = x.getKey();
+      LookupValue value = x.getValue();
+      Collection<PutColumn> columns = StreamSupport.stream(value.toColumns().spliterator(), false)
+          .map(column -> new PutColumn(columnFamily, column.getKey(), column.getValue()))
+          .collect(Collectors.toList());
+      return new PutFlowFile(tableName, key.toBytes(), columns, null);
 
-		}).collect(Collectors.toList());
+    }).collect(Collectors.toList());
 
-		try {
-			clientService.put(tableName, puts);
-			session.getProvenanceReporter().send(flowFile,
-					String.format("%s", new Object[] { clientService.toTransitUri(tableName, "") }));
-			session.transfer(flowFile, REL_SUCCESS);
-		} catch (IOException e) {
-			getLogger().error("HBase put failed", e);
-			session.transfer(flowFile, REL_FAILURE);
-		}
-	}
+    try {
+      clientService.put(tableName, puts);
+      session.getProvenanceReporter().send(flowFile,
+          String.format("%s", new Object[]{clientService.toTransitUri(tableName, "")}));
+      session.transfer(flowFile, REL_SUCCESS);
+    } catch (IOException e) {
+      getLogger().error("HBase put failed", e);
+      session.transfer(flowFile, REL_FAILURE);
+    }
+  }
 
-	protected String getTransitUri(String table, String row) {
-		return clientService.toTransitUri(table, row);
-	}
+  protected String getTransitUri(String table, String row) {
+    return clientService.toTransitUri(table, row);
+  }
 }
