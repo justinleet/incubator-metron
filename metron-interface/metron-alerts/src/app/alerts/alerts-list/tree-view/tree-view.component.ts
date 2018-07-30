@@ -16,8 +16,7 @@
  * limitations under the License.
  */
 
-import { Component, OnInit, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
-import {Router} from '@angular/router';
+import { Component, OnInit, OnChanges, SimpleChanges, OnDestroy, Input } from '@angular/core';
 import {Subscription, Observable} from 'rxjs/Rx';
 
 import {TableViewComponent} from '../table-view/table-view.component';
@@ -47,21 +46,20 @@ import { GlobalConfigService } from '../../../service/global-config.service';
 
 export class TreeViewComponent extends TableViewComponent implements OnInit, OnChanges, OnDestroy {
 
+  @Input() globalConfig: {} = {};
   groupByFields: string[] = [];
   topGroups: TreeGroupData[] = [];
   groupResponse: GroupResponse = new GroupResponse();
   treeGroupSubscriptionMap: {[key: string]: TreeAlertsSubscription } = {};
   alertsChangedSubscription: Subscription;
-  globalConfig: {} = {};
   configSubscription: Subscription;
 
-  constructor(router: Router,
-              searchService: SearchService,
+  constructor(searchService: SearchService,
               metronDialogBox: MetronDialogBox,
               updateService: UpdateService,
               metaAlertService: MetaAlertService,
               globalConfigService: GlobalConfigService) {
-    super(router, searchService, metronDialogBox, updateService, metaAlertService, globalConfigService);
+    super(searchService, metronDialogBox, updateService, metaAlertService, globalConfigService);
   }
 
   addAlertChangedListner() {
@@ -121,7 +119,7 @@ export class TreeViewComponent extends TableViewComponent implements OnInit, OnC
   }
 
   getGroups() {
-    let groupRequest = this.queryBuilder.groupRequest;
+    let groupRequest = this.getGroupRequest();
     groupRequest.query = this.queryBuilder.generateSelect();
 
     this.searchService.groups(groupRequest).subscribe(groupResponse => {
@@ -162,7 +160,7 @@ export class TreeViewComponent extends TableViewComponent implements OnInit, OnC
   }
 
   initTopGroups() {
-    let groupByFields =  this.queryBuilder.groupRequest.groups.map(group => group.field);
+    let groupByFields =  this.getGroupRequest().groups.map(group => group.field);
     let currentTopGroupKeys = this.groupResponse.groupResults.map(groupResult => groupResult.key);
     let previousTopGroupKeys = this.topGroups.map(group => group.key);
 
@@ -186,14 +184,10 @@ export class TreeViewComponent extends TableViewComponent implements OnInit, OnC
 
   ngOnInit() {
     this.addAlertChangedListner();
-    this.configSubscription = this.globalConfigService.get().subscribe((config: {}) => {
-      this.globalConfig = config;
-    });
   }
 
   ngOnDestroy(): void {
     this.removeAlertChangedLister();
-    this.configSubscription.unsubscribe();
   }
 
   searchGroup(selectedGroup: TreeGroupData, searchRequest: SearchRequest): Subscription {
@@ -392,7 +386,7 @@ export class TreeViewComponent extends TableViewComponent implements OnInit, OnC
       if (this.canCreateMetaAlert(searchResponse.total)) {
         let metaAlert = new MetaAlertCreateRequest();
         metaAlert.alerts = this.createGetRequestArray(searchResponse);
-        metaAlert.groups = this.queryBuilder.groupRequest.groups.map(grp => grp.field);
+        metaAlert.groups = this.getGroupRequest().groups.map(grp => grp.field);
 
         this.metaAlertService.create(metaAlert).subscribe(() => {
           setTimeout(() => this.onRefreshData.emit(true), 1000);
@@ -401,6 +395,27 @@ export class TreeViewComponent extends TableViewComponent implements OnInit, OnC
       }
     });
   }
+
+  hasScore(alertSource) {
+    if(alertSource[this.threatScoreFieldName()]) {
+      return true;
+    }
+    else {
+      return false;
+    }
+  }
+
+  getScore(alertSource) {
+    return alertSource[this.threatScoreFieldName()];
+  }
+
+  threatScoreFieldName() {
+    return this.globalConfig['threat.triage.score.field'];
+  }
+
+  getGroupRequest() {
+    return this.queryBuilder.groupRequest(this.threatScoreFieldName());
+    }
 
   createMetaAlert($event, group: TreeGroupData, index: number) {
     if (this.canCreateMetaAlert(group.total)) {
