@@ -86,6 +86,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private DataSource dataSource;
 
+    // TODO pull this out into the separate class.
+    // Then have a separate config class that we switch between with profile for LDAP.
+    // Profile setting exposed in Ambari, so we can switch this on the fly.
     @Autowired
     public void configureJdbc(AuthenticationManagerBuilder auth) throws Exception {
         List<String> activeProfiles = Arrays.asList(environment.getActiveProfiles());
