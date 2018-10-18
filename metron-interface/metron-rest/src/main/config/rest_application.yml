@@ -25,7 +25,7 @@ spring:
   #TODO delete this
   logging:
     level:
-      log4j.logger.org.apache.metron: DEBUG
+      org.apache.metron: DEBUG
 
 zookeeper:
   url: ${ZOOKEEPER}

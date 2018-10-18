@@ -21,18 +21,3 @@ port: {{metron_alerts_ui_port}}
 rest:
   host: {{metron_rest_host}}
   port: {{metron_rest_port}}
-
-ldap:
-  provider:
-    url: {{ldap_url}}
-    userdn: {{ldap_userdn}}
-    password: {{ldap_password}}
-  user:
-    dn.patterns: {{ldap_user_pattern}}
-    passwordAttribute: {{ldap_user_password}}
-    searchBase: {{ldap_user_searchbase}}
-    searchFilter: {{ldap_user_searchfilter}}
-  group:
-    searchBase: {{ldap_group_searchbase}}
-    searchFilter: {{ldap_group_searchfilter}}
-    roleAttribute: {{ldap_group_role}}
