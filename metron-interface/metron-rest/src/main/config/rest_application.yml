@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 spring:
+  profiles: jdbc
   datasource:
       driverClassName: ${METRON_JDBC_DRIVER}
       url: ${METRON_JDBC_URL}
@@ -21,6 +22,10 @@ spring:
       password: ${METRON_JDBC_PASSWORD}
       platform: ${METRON_JDBC_PLATFORM}
       continue-on-error: true
+  #TODO delete this
+  logging:
+    level:
+      log4j.logger.org.apache.metron: DEBUG
 
 zookeeper:
   url: ${ZOOKEEPER}
@@ -62,3 +67,22 @@ pcap:
   page.size: ${PCAP_PAGE_SIZE}
   yarn.queue: ${PCAP_YARN_QUEUE}
   finalizer.threadpool.size: ${PCAP_FINALIZER_THREADPOOL_SIZE}
+
+---
+
+spring:
+  profiles: ldap
+ldap:
+  provider:
+    url: ldap://localhost:33389
+    userdn: uid=admin,ou=people,dc=hadoop,dc=apache,dc=org
+    password: admin-password
+  user:
+    dn.patterns: uid={0},ou=people,dc=hadoop,dc=apache,dc=org
+    passwordAttribute: userPassword
+    searchBase: ou=people,dc=hadoop,dc=apache,dc=org
+    searchFilter: ""
+  group:
+    searchBase: ou=groups,dc=hadoop,dc=apache,dc=org
+    searchFilter: "member={0}"
+    roleAttribute: "cn"

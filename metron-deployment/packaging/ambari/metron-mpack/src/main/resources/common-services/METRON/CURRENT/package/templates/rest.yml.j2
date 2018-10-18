@@ -16,16 +16,7 @@
  spring:
   application:
     name: metron-rest
- {% if metron_alerts_ssl %}
-server:
-  ssl:
-    key-store: {{metron_alerts_ssl_keystore}}
-    key-store-password: ${METRON_KEYSTORE_PASSWORD}
-    key-store-type: {{metron_alerts_ssl_keystoretype}}
-    key-alias: {{metron_alerts_ssl_keyalias}}
-security:
-    require-ssl: true
-{% endif %}
+ {% if metron_ldap %}
  ldap:
   provider:
     url: {{ldap_url}}
@@ -40,3 +31,4 @@ security:
     searchBase: {{ldap_group_searchbase}}
     searchFilter: {{ldap_group_searchfilter}}
     roleAttribute: {{ldap_group_role}}
+  {% endif %}

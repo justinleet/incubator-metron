@@ -103,7 +103,7 @@ configurations:
       delete.topic.enable: "true"
       offsets.topic.replication.factor: 1
   - metron-rest-env:
-      metron_spring_profiles_active: "dev"
+      metron_spring_profiles_active: "dev,jdbc"
   - metron-parsers-env:
       parsers: "\"bro,snort,yaf\""
   - elastic-site:

@@ -95,9 +95,7 @@
     <display-name>Bind User</display-name>
     <value></value>
     <description>Full distinguished name (DN), including common name (CN), of an LDAP user account that has privileges to search for users. </description>
-    <value-attributes>
-      <overridable>false</overridable>
-    </value-attributes>
+    <!-- TODO need value-attributes overridable false? It's optional, so I don't think it can be left like that -->
     <on-ambari-upgrade add="true"/>
   </property>
   <property>
@@ -106,77 +104,8 @@
     <value></value>
     <property-type>PASSWORD</property-type>
     <description>Password for the account that can search for users</description>
-    <value-attributes>
-      <type>password</type>
-      <overridable>false</overridable>
-    </value-attributes>
+    <!-- TODO need value-attributes overridable false? It's optional, so I don't think it can be left like that -->
     <on-ambari-upgrade add="true"/>
   </property>
 
-  <property>
-    <name>metron.sso.enabled</name>
-    <display-name>Enable Metron SSO</display-name>
-    <value>false</value>
-    <description>Turn on to enable integration with KnoxSSO</description>
-    <value-attributes>
-      <type>value-list</type>
-      <entries>
-        <entry>
-          <value>true</value>
-          <label>Enabled</label>
-        </entry>
-        <entry>
-          <value>false</value>
-          <label>Off</label>
-        </entry>
-      </entries>
-      <selection-cardinality>1</selection-cardinality>
-      <overridable>false</overridable>
-    </value-attributes>
-    <on-ambari-upgrade add="true"/>
-  </property>
-  <property>
-    <name>metron.sso.providerurl</name>
-    <display-name>SSO provider url</display-name>
-    <value></value>
-    <description>Example: https://KNOX_HOST:KNOX_PORT/gateway/TOPOLOGY_NAME/knoxsso/api/v1/websso</description>
-    <value-attributes>
-      <empty-value-valid>true</empty-value-valid>
-      <overridable>false</overridable>
-    </value-attributes>
-    <on-ambari-upgrade add="true"/>
-  </property>
-  <property>
-    <name>metron.sso.publicKey</name>
-    <display-name>SSO public key</display-name>
-    <value></value>
-    <description>Public key for SSO cookie verification</description>
-    <value-attributes>
-      <type>multiLine</type>
-      <empty-value-valid>true</empty-value-valid>
-      <overridable>false</overridable>
-    </value-attributes>
-    <on-ambari-upgrade add="true"/>
-  </property>
-  <property>
-    <name>metron.sso.cookiename</name>
-    <display-name>SSO cookiename</display-name>
-    <value>hadoop-jwt</value>
-    <description>Parameter name for SSO cookie</description>
-    <value-attributes>
-      <empty-value-valid>true</empty-value-valid>
-    </value-attributes>
-    <on-ambari-upgrade add="true"/>
-  </property>
-  <property>
-    <name>metron.sso.query.param.originalurl</name>
-    <display-name>SSO query param</display-name>
-    <value>originalUrl</value>
-    <description>Query name for appending original url in SSO url</description>
-    <value-attributes>
-      <empty-value-valid>true</empty-value-valid>
-      <overridable>false</overridable>
-    </value-attributes>
-    <on-ambari-upgrade add="true"/>
-  </property>
 </configuration>

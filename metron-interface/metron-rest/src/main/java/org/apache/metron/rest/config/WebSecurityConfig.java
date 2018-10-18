@@ -20,6 +20,9 @@ package org.apache.metron.rest.config;
 import static org.apache.metron.rest.MetronRestConstants.SECURITY_ROLE_ADMIN;
 import static org.apache.metron.rest.MetronRestConstants.SECURITY_ROLE_USER;
 
+import java.util.Arrays;
+import java.util.List;
+import javax.sql.DataSource;
 import org.apache.metron.rest.MetronRestConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,9 +36,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
-import org.springframework.security.crypto.password.LdapShaPasswordEncoder;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
@@ -43,10 +44,6 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-
-import javax.sql.DataSource;
-import java.util.Arrays;
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -117,37 +114,44 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     // Then have a separate config class that we switch between with profile for LDAP.
     // Profile setting exposed in Ambari, so we can switch this on the fly.
     @Autowired
-    public void configureJdbc(AuthenticationManagerBuilder auth) throws Exception {
+    public void configure(AuthenticationManagerBuilder auth) throws Exception {
         List<String> activeProfiles = Arrays.asList(environment.getActiveProfiles());
         if (activeProfiles.contains(MetronRestConstants.LDAP_PROFILE)) {
-            LOG.debug("Setting up LDAP authentication against %s", providerUrl);
-            if(this.providerUrl != null && !this.providerUrl.isEmpty()) {
-                auth.ldapAuthentication()
-                    .userDnPatterns(userDnPatterns)
-                    .userSearchBase(userSearchBase)
-                    .userSearchFilter(userSearchFilter)
-                    .groupRoleAttribute(groupRoleAttribute)
-                    .groupSearchFilter(groupSearchFilter)
-                    .groupSearchBase(groupSearchBase)
-                    .contextSource()
-                    .url(providerUrl)
-                    .managerDn(providerUserDn)
-                    .managerPassword(providerPassword)
-                    .and()
-                    .passwordCompare()
-                    .passwordEncoder(PasswordEncoderFactories.createDelegatingPasswordEncoder())
-                    .passwordAttribute(passwordAttribute);
-            }
-        }
-        if (activeProfiles.contains(MetronRestConstants.DEV_PROFILE) ||
-                activeProfiles.contains(MetronRestConstants.TEST_PROFILE)) {
-          auth.jdbcAuthentication().dataSource(dataSource)
-                  .withUser("user").password("password").roles(SECURITY_ROLE_USER).and()
-                  .withUser("user1").password("password").roles(SECURITY_ROLE_USER).and()
-                  .withUser("user2").password("password").roles(SECURITY_ROLE_USER).and()
-                  .withUser("admin").password("password").roles(SECURITY_ROLE_USER, SECURITY_ROLE_ADMIN);
+            LOG.debug("Setting up LDAP authentication against {}.", providerUrl);
+            auth.ldapAuthentication()
+                .userDnPatterns(userDnPatterns)
+                .userSearchBase(userSearchBase)
+                .userSearchFilter(userSearchFilter)
+                .groupRoleAttribute(groupRoleAttribute)
+                .groupSearchFilter(groupSearchFilter)
+                .groupSearchBase(groupSearchBase)
+                .contextSource()
+                .url(providerUrl)
+                .managerDn(providerUserDn)
+                .managerPassword(providerPassword)
+                .and()
+                .passwordCompare()
+                .passwordEncoder(PasswordEncoderFactories.createDelegatingPasswordEncoder())
+                .passwordAttribute(passwordAttribute);
+        } else if (!activeProfiles.contains(MetronRestConstants.LDAP_PROFILE) &&
+            (activeProfiles.contains(MetronRestConstants.DEV_PROFILE) ||
+                activeProfiles.contains(MetronRestConstants.TEST_PROFILE))) {
+            LOG.debug("Setting up dev/test JDBC authentication.");
+            auth.jdbcAuthentication().dataSource(dataSource)
+                .withUser("user").password("password").roles(SECURITY_ROLE_USER).and()
+                .withUser("user1").password("password").roles(SECURITY_ROLE_USER).and()
+                .withUser("user2").password("password").roles(SECURITY_ROLE_USER).and()
+                .withUser("admin").password("password")
+                .roles(SECURITY_ROLE_USER, SECURITY_ROLE_ADMIN);
         } else {
+            LOG.debug("Setting up JDBC authentication.");
             auth.jdbcAuthentication().dataSource(dataSource);
         }
+    }
+
+    // TODO this seems sketchy
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return NoOpPasswordEncoder.getInstance();
     }
 }

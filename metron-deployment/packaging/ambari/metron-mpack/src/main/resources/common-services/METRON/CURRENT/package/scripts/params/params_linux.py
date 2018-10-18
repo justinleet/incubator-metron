@@ -279,6 +279,7 @@ ldap_user_searchfilter = config['configurations']['metron-security-env']['metron
 ldap_group_searchbase = config['configurations']['metron-security-env']['metron.ldap.group.searchbase']
 ldap_group_searchfilter = config['configurations']['metron-security-env']['metron.ldap.group.searchfilter']
 ldap_group_role = config['configurations']['metron-security-env']['metron.ldap.group.roleattribute']
+metron_ldap = ldap_url != ""
 
 # Alerts UI
 metron_alerts_pid_dir = config['configurations']['metron-alerts-ui-env']['metron_alerts_pid_dir']
