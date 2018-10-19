@@ -95,8 +95,11 @@
     <display-name>Bind User</display-name>
     <value></value>
     <description>Full distinguished name (DN), including common name (CN), of an LDAP user account that has privileges to search for users. </description>
-    <!-- TODO need value-attributes overridable false? It's optional, so I don't think it can be left like that -->
     <on-ambari-upgrade add="true"/>
+    <value-attributes>
+      <overridable>false</overridable>
+      <empty-value-valid>true</empty-value-valid>
+    </value-attributes>
   </property>
   <property>
     <name>metron.ldap.bind.password</name>
@@ -104,7 +107,10 @@
     <value></value>
     <property-type>PASSWORD</property-type>
     <description>Password for the account that can search for users</description>
-    <!-- TODO need value-attributes overridable false? It's optional, so I don't think it can be left like that -->
+    <value-attributes>
+      <overridable>false</overridable>
+      <empty-value-valid>true</empty-value-valid>
+    </value-attributes>
     <on-ambari-upgrade add="true"/>
   </property>
 

@@ -131,13 +131,16 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .managerPassword(providerPassword)
                 .and()
                 .passwordCompare()
-                .passwordEncoder(PasswordEncoderFactories.createDelegatingPasswordEncoder())
+//                .passwordEncoder(PasswordEncoderFactories.createDelegatingPasswordEncoder())
+                // TODO figure out if this should be something else? Passed in, maybe? There's no way we should be using NoOp for LDAP
+                .passwordEncoder(NoOpPasswordEncoder.getInstance())
                 .passwordAttribute(passwordAttribute);
         } else if (!activeProfiles.contains(MetronRestConstants.LDAP_PROFILE) &&
             (activeProfiles.contains(MetronRestConstants.DEV_PROFILE) ||
                 activeProfiles.contains(MetronRestConstants.TEST_PROFILE))) {
             LOG.debug("Setting up dev/test JDBC authentication.");
             auth.jdbcAuthentication().dataSource(dataSource)
+                .passwordEncoder(NoOpPasswordEncoder.getInstance())
                 .withUser("user").password("password").roles(SECURITY_ROLE_USER).and()
                 .withUser("user1").password("password").roles(SECURITY_ROLE_USER).and()
                 .withUser("user2").password("password").roles(SECURITY_ROLE_USER).and()
@@ -145,13 +148,13 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .roles(SECURITY_ROLE_USER, SECURITY_ROLE_ADMIN);
         } else {
             LOG.debug("Setting up JDBC authentication.");
-            auth.jdbcAuthentication().dataSource(dataSource);
+            auth.jdbcAuthentication().dataSource(dataSource).passwordEncoder(NoOpPasswordEncoder.getInstance());
         }
     }
 
-    // TODO this seems sketchy
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return NoOpPasswordEncoder.getInstance();
-    }
+//     TODO this seems sketchy
+//    @Bean
+//    public PasswordEncoder passwordEncoder() {
+//        return NoOpPasswordEncoder.getInstance();
+//    }
 }

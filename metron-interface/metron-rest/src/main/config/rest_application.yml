@@ -13,19 +13,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-spring:
-  profiles: jdbc
-  datasource:
-      driverClassName: ${METRON_JDBC_DRIVER}
-      url: ${METRON_JDBC_URL}
-      username: ${METRON_JDBC_USERNAME}
-      password: ${METRON_JDBC_PASSWORD}
-      platform: ${METRON_JDBC_PLATFORM}
-      continue-on-error: true
-  #TODO delete this
-  logging:
-    level:
-      org.apache.metron: DEBUG
+
+#TODO delete this
+logging:
+  level:
+    org.apache.metron: DEBUG
 
 zookeeper:
   url: ${ZOOKEEPER}
@@ -71,18 +63,31 @@ pcap:
 ---
 
 spring:
+  profiles: jdbc
+  datasource:
+    driverClassName: ${METRON_JDBC_DRIVER}
+    url: ${METRON_JDBC_URL}
+    username: ${METRON_JDBC_USERNAME}
+    password: ${METRON_JDBC_PASSWORD}
+    platform: ${METRON_JDBC_PLATFORM}
+    continue-on-error: true
+
+---
+
+# TODO replace with env vars
+spring:
   profiles: ldap
 ldap:
   provider:
-    url: ldap://localhost:33389
-    userdn: uid=admin,ou=people,dc=hadoop,dc=apache,dc=org
-    password: admin-password
+    url: ${METRON_LDAP_URL}
+    userdn: ${METRON_USERDN}
+    password: ${METRON_LDAP_PASSWORD}
   user:
-    dn.patterns: uid={0},ou=people,dc=hadoop,dc=apache,dc=org
-    passwordAttribute: userPassword
-    searchBase: ou=people,dc=hadoop,dc=apache,dc=org
-    searchFilter: ""
+    dn.patterns: ${METRON_LDAP_USER_PATTERN}
+    passwordAttribute: ${METRON_LDAP_USER_PASSWORD}
+    searchBase: ${METRON_LDAP_USER_SEARCHBASE}
+    searchFilter: ${METRON_LDAP_USER_SEARCHFILTER}
   group:
-    searchBase: ou=groups,dc=hadoop,dc=apache,dc=org
-    searchFilter: "member={0}"
-    roleAttribute: "cn"
+    searchBase: ${METRON_LDAP_GROUP_SEARCHBASE}
+    searchFilter: ${METRON_LDAP_GROUP_SEARCHFILTER}
+    roleAttribute: ${metron_ldap_group_role}

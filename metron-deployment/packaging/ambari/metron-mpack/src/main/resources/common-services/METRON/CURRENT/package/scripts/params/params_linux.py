@@ -268,28 +268,21 @@ if security_enabled:
         solr_principal_name = solr_principal_name.replace('_HOST', hostname_lowercase)
 
 # LDAP
-ldap_url = config['configurations']['metron-security-env']['metron.ldap.url']
-ldap_userdn = config['configurations']['metron-security-env']['metron.ldap.bind.dn']
-ldap_password = config['configurations']['metron-security-env']['metron.ldap.bind.password']
-ldap_user_pattern = config['configurations']['metron-security-env']['metron.ldap.user.dnpattern']
-ldap_user_password = config['configurations']['metron-security-env']['metron.ldap.user.password']
-ldap_user_dnbase = config['configurations']['metron-security-env']['metron.ldap.user.basedn']
-ldap_user_searchbase = config['configurations']['metron-security-env']['metron.ldap.user.searchbase']
-ldap_user_searchfilter = config['configurations']['metron-security-env']['metron.ldap.user.searchfilter']
-ldap_group_searchbase = config['configurations']['metron-security-env']['metron.ldap.group.searchbase']
-ldap_group_searchfilter = config['configurations']['metron-security-env']['metron.ldap.group.searchfilter']
-ldap_group_role = config['configurations']['metron-security-env']['metron.ldap.group.roleattribute']
+metron_ldap_url = config['configurations']['metron-security-env']['metron.ldap.url']
+metron_ldap_userdn = config['configurations']['metron-security-env']['metron.ldap.bind.dn']
+metron_ldap_password = config['configurations']['metron-security-env']['metron.ldap.bind.password']
+metron_ldap_user_pattern = config['configurations']['metron-security-env']['metron.ldap.user.dnpattern']
+metron_ldap_user_password = config['configurations']['metron-security-env']['metron.ldap.user.password']
+metron_ldap_user_dnbase = config['configurations']['metron-security-env']['metron.ldap.user.basedn']
+metron_ldap_user_searchbase = config['configurations']['metron-security-env']['metron.ldap.user.searchbase']
+metron_ldap_user_searchfilter = config['configurations']['metron-security-env']['metron.ldap.user.searchfilter']
+metron_ldap_group_searchbase = config['configurations']['metron-security-env']['metron.ldap.group.searchbase']
+metron_ldap_group_searchfilter = config['configurations']['metron-security-env']['metron.ldap.group.searchfilter']
+metron_ldap_group_role = config['configurations']['metron-security-env']['metron.ldap.group.roleattribute']
 metron_ldap = ldap_url != ""
 
-# Alerts UI
-metron_alerts_pid_dir = config['configurations']['metron-alerts-ui-env']['metron_alerts_pid_dir']
-metron_alerts_jvmopts = config['configurations']['metron-alerts-ui-env']['metron_alerts_jvmopts']
-
 # Management UI
-metron_config_pid_dir = config['configurations']['metron-management-ui-env']['metron_config_pid_dir']
 metron_rest_host = default("/clusterHostInfo/metron_rest_hosts", [hostname])[0]
-metron_management_ui_port = config['configurations']['metron-management-ui-env'] ['metron_management_ui_port']
-metron_config_jvmopts = config['configurations']['metron-management-ui-env']['metron_config_jvmopts']
 
 # REST
 metron_rest_pid_dir = config['configurations']['metron-rest-env']['metron_rest_pid_dir']
