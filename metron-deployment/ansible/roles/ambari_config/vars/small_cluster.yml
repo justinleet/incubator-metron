@@ -96,7 +96,7 @@ configurations:
   - kafka-broker:
       log.dirs: '{{ kafka_log_dirs | default("/kafka-log") }}'
   - metron-rest-env:
-      metron_spring_profiles_active: "dev,jdbc"
+      metron_spring_profiles_active: "dev"
   - metron-env:
       parsers: "bro,snort,yaf"
   - elastic-site:

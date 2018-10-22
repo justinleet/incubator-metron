@@ -14,11 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#TODO delete this
-logging:
-  level:
-    org.apache.metron: DEBUG
-
 zookeeper:
   url: ${ZOOKEEPER}
 
@@ -60,27 +55,18 @@ pcap:
   yarn.queue: ${PCAP_YARN_QUEUE}
   finalizer.threadpool.size: ${PCAP_FINALIZER_THREADPOOL_SIZE}
 
----
+datasource:
+  driverClassName: ${METRON_JDBC_DRIVER}
+  url: ${METRON_JDBC_URL}
+  username: ${METRON_JDBC_USERNAME}
+  password: ${METRON_JDBC_PASSWORD}
+  platform: ${METRON_JDBC_PLATFORM}
+  continue-on-error: true
 
-spring:
-  profiles: jdbc
-  datasource:
-    driverClassName: ${METRON_JDBC_DRIVER}
-    url: ${METRON_JDBC_URL}
-    username: ${METRON_JDBC_USERNAME}
-    password: ${METRON_JDBC_PASSWORD}
-    platform: ${METRON_JDBC_PLATFORM}
-    continue-on-error: true
-
----
-
-# TODO replace with env vars
-spring:
-  profiles: ldap
 ldap:
   provider:
     url: ${METRON_LDAP_URL}
-    userdn: ${METRON_USERDN}
+    userdn: ${METRON_LDAP_USERDN}
     password: ${METRON_LDAP_PASSWORD}
   user:
     dn.patterns: ${METRON_LDAP_USER_PATTERN}
@@ -90,4 +76,4 @@ ldap:
   group:
     searchBase: ${METRON_LDAP_GROUP_SEARCHBASE}
     searchFilter: ${METRON_LDAP_GROUP_SEARCHFILTER}
-    roleAttribute: ${metron_ldap_group_role}
+    roleAttribute: ${METRON_LDAP_GROUP_ROLE}

@@ -279,7 +279,7 @@ metron_ldap_user_searchfilter = config['configurations']['metron-security-env'][
 metron_ldap_group_searchbase = config['configurations']['metron-security-env']['metron.ldap.group.searchbase']
 metron_ldap_group_searchfilter = config['configurations']['metron-security-env']['metron.ldap.group.searchfilter']
 metron_ldap_group_role = config['configurations']['metron-security-env']['metron.ldap.group.roleattribute']
-metron_ldap = ldap_url != ""
+metron_ldap = metron_ldap_url != ""
 
 # Management UI
 metron_rest_host = default("/clusterHostInfo/metron_rest_hosts", [hostname])[0]

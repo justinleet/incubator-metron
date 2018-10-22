@@ -110,11 +110,12 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private DataSource dataSource;
 
-    // TODO pull this out into the separate class.
-    // Then have a separate config class that we switch between with profile for LDAP.
-    // Profile setting exposed in Ambari, so we can switch this on the fly.
     @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Override
     public void configure(AuthenticationManagerBuilder auth) throws Exception {
+        // Note that we can switch profiles on the fly in Ambari.
         List<String> activeProfiles = Arrays.asList(environment.getActiveProfiles());
         if (activeProfiles.contains(MetronRestConstants.LDAP_PROFILE)) {
             LOG.debug("Setting up LDAP authentication against {}.", providerUrl);
@@ -131,30 +132,28 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .managerPassword(providerPassword)
                 .and()
                 .passwordCompare()
-//                .passwordEncoder(PasswordEncoderFactories.createDelegatingPasswordEncoder())
-                // TODO figure out if this should be something else? Passed in, maybe? There's no way we should be using NoOp for LDAP
-                .passwordEncoder(NoOpPasswordEncoder.getInstance())
+                .passwordEncoder(passwordEncoder)
                 .passwordAttribute(passwordAttribute);
         } else if (!activeProfiles.contains(MetronRestConstants.LDAP_PROFILE) &&
             (activeProfiles.contains(MetronRestConstants.DEV_PROFILE) ||
                 activeProfiles.contains(MetronRestConstants.TEST_PROFILE))) {
             LOG.debug("Setting up dev/test JDBC authentication.");
             auth.jdbcAuthentication().dataSource(dataSource)
-                .passwordEncoder(NoOpPasswordEncoder.getInstance())
-                .withUser("user").password("password").roles(SECURITY_ROLE_USER).and()
-                .withUser("user1").password("password").roles(SECURITY_ROLE_USER).and()
-                .withUser("user2").password("password").roles(SECURITY_ROLE_USER).and()
-                .withUser("admin").password("password")
+                .passwordEncoder(passwordEncoder)
+                .withUser("user").password("{noop}password").roles(SECURITY_ROLE_USER).and()
+                .withUser("user1").password("{noop}password").roles(SECURITY_ROLE_USER).and()
+                .withUser("user2").password("{noop}password").roles(SECURITY_ROLE_USER).and()
+                .withUser("admin").password("{noop}password")
                 .roles(SECURITY_ROLE_USER, SECURITY_ROLE_ADMIN);
         } else {
             LOG.debug("Setting up JDBC authentication.");
+            // TODO what are we supposed to do here?
             auth.jdbcAuthentication().dataSource(dataSource).passwordEncoder(NoOpPasswordEncoder.getInstance());
         }
     }
 
-//     TODO this seems sketchy
-//    @Bean
-//    public PasswordEncoder passwordEncoder() {
-//        return NoOpPasswordEncoder.getInstance();
-//    }
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+      return PasswordEncoderFactories.createDelegatingPasswordEncoder();
+    }
 }

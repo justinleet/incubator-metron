@@ -17,7 +17,7 @@
 # limitations under the License.
 #
 
-if [ -z "${METRON_JDBC_PASSWORD}" ] || [ -z "${METRON_LDAP_PASSWORD}" ]; then
+if [ -z "${METRON_JDBC_PASSWORD}" ] && [ -z "${METRON_LDAP_PASSWORD}" ]; then
     echo "Authentication password unset. Exiting."
     exit 1
 fi

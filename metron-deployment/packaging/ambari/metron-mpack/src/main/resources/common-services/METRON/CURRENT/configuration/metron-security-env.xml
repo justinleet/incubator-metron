@@ -39,6 +39,17 @@
     <on-ambari-upgrade add="true"/>
   </property>
   <property>
+    <name>metron.ldap.user.searchbase</name>
+    <display-name>Group Search Base</display-name>
+    <value>ou=people,dc=hadoop,dc=apache,dc=org</value>
+    <description>LDAP group searchbase</description>
+    <value-attributes>
+      <overridable>false</overridable>
+      <empty-value-valid>true</empty-value-valid>
+    </value-attributes>
+    <on-ambari-upgrade add="true"/>
+  </property>
+  <property>
     <name>metron.ldap.group.searchbase</name>
     <display-name>Group Search Base</display-name>
     <value>ou=groups,dc=hadoop,dc=apache,dc=org</value>
@@ -52,8 +63,19 @@
   <property>
     <name>metron.ldap.group.searchfilter</name>
     <display-name>Group Search Filter</display-name>
-    <value></value>
+    <value>member={0}</value>
     <description>LDAP group search filter</description>
+    <value-attributes>
+      <overridable>false</overridable>
+      <empty-value-valid>true</empty-value-valid>
+    </value-attributes>
+    <on-ambari-upgrade add="true"/>
+  </property>
+  <property>
+    <name>metron.ldap.user.basedn</name>
+    <display-name>User Base DN</display-name>
+    <value>uid=admin,ou=people,dc=hadoop,dc=apache,dc=org</value>
+    <description>LDAP User Base DN</description>
     <value-attributes>
       <overridable>false</overridable>
       <empty-value-valid>true</empty-value-valid>
@@ -93,7 +115,7 @@
   <property>
     <name>metron.ldap.bind.dn</name>
     <display-name>Bind User</display-name>
-    <value></value>
+    <value>uid=admin,ou=people,dc=hadoop,dc=apache,dc=org</value>
     <description>Full distinguished name (DN), including common name (CN), of an LDAP user account that has privileges to search for users. </description>
     <on-ambari-upgrade add="true"/>
     <value-attributes>
