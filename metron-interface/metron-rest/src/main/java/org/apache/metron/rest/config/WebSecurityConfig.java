@@ -114,18 +114,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-//    @Autowired
-//    private LdapAuthoritiesPopulator authoritiesPopulator;
-
     @Override
     public void configure(AuthenticationManagerBuilder auth) throws Exception {
         // Note that we can switch profiles on the fly in Ambari.
         List<String> activeProfiles = Arrays.asList(environment.getActiveProfiles());
         if (activeProfiles.contains(MetronRestConstants.LDAP_PROFILE)) {
-//            DefaultLdapAuthoritiesPopulator ldapAuthoritiesPopulator =
-//                new DefaultLdapAuthoritiesPopulator(contextSource, ldapGroupSearchBase);
-//            ldapAuthoritiesPopulator.setGroupRoleAttribute(ldapGroupRoleAttribute);
-//            ldapAuthoritiesPopulator.setGroupSearchFilter(ldapGroupSearchFilter);
             LOG.debug("Setting up LDAP authentication against {}.", providerUrl);
             auth.ldapAuthentication()
                 .userDnPatterns(userDnPatterns)
@@ -134,7 +127,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .groupRoleAttribute(groupRoleAttribute)
                 .groupSearchFilter(groupSearchFilter)
                 .groupSearchBase(groupSearchBase)
-//                .ldapAuthoritiesPopulator(authoritiesPopulator)
                 .contextSource()
                 .url(providerUrl)
                 .managerDn(providerUserDn)

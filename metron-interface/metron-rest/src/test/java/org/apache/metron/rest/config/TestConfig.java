@@ -104,7 +104,7 @@ public class TestConfig {
       .build();
     try {
       runner.start();
-      File globalConfigFile = new File("src/test/resources/zookeeper/global.json");
+      File globalConfigFile = new File("/Users/jleet/Documents/workspace/metron/metron-interface/metron-rest/src/test/resources/zookeeper/global.json");
       try(BufferedReader r = new BufferedReader(new FileReader(globalConfigFile))){
         String globalConfig = IOUtils.toString(r);
         ConfigurationsUtils.writeGlobalConfigToZookeeper(globalConfig.getBytes(), zkServerComponent.getConnectionString());
