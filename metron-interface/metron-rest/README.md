@@ -200,6 +200,12 @@ Metron REST can be configured to use LDAP for authentication and roles. Configur
 
 Configuration will default to matching Knox's Demo LDAP for convenience. This should only be used for development purposed. Manual instructions for setting up demo LDAP and finalizing configuration (e.g. setting up the user LDIF file) can be found in the [Development README](../../metron-deployment/development/README.md#knox-demo-ldap).
 
+#### LDAPS
+There is configuration to provide a path to a truststore with SSL certificates and provide a password. Users should import certificates as needed to appropriate truststores.  An example of doing this is:
+```
+keytool -import -alias <alias> -file <certificate> -keystore <keystore_file> -storepass <password>
+```
+
 
 #### Roles
 Roles used by Metron are ROLE_ADMIN and ROLE_USER. Metron will use a property in a group containing the appropriate role to construct this.
