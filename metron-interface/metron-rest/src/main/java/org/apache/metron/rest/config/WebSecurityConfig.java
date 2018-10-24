@@ -140,7 +140,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             LOG.debug("Setting up dev/test JDBC authentication.");
             auth.jdbcAuthentication().dataSource(dataSource)
                 .passwordEncoder(passwordEncoder)
-                .withDefaultSchema()
                 .withUser("user").password(passwordEncoder.encode("password")).roles(SECURITY_ROLE_USER).and()
                 .withUser("user1").password(passwordEncoder.encode("password")).roles(SECURITY_ROLE_USER).and()
                 .withUser("user2").password(passwordEncoder.encode("password")).roles(SECURITY_ROLE_USER).and()
