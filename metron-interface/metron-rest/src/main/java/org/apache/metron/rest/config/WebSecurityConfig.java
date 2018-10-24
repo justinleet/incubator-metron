@@ -39,7 +39,6 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.ldap.userdetails.LdapAuthoritiesPopulator;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.stereotype.Controller;
@@ -141,6 +140,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             LOG.debug("Setting up dev/test JDBC authentication.");
             auth.jdbcAuthentication().dataSource(dataSource)
                 .passwordEncoder(passwordEncoder)
+                .withDefaultSchema()
                 .withUser("user").password(passwordEncoder.encode("password")).roles(SECURITY_ROLE_USER).and()
                 .withUser("user1").password(passwordEncoder.encode("password")).roles(SECURITY_ROLE_USER).and()
                 .withUser("user2").password(passwordEncoder.encode("password")).roles(SECURITY_ROLE_USER).and()
