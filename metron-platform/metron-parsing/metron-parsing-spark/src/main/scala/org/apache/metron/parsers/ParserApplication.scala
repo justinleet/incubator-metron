@@ -51,7 +51,8 @@ object ParserApplication {
     val brokers = args(1)
     val sensorType = args(2)
     val groupId = sensorType + "_parser"
-    val test = args.length > 3 && "test".equals(args(3))
+    val kerberos = args.length > 3 && "kerberos".equals(args(3))
+    val test = args.length > 4 && "test".equals(args(4))
 
     // Create context with 1 second batch interval
     val sparkConf = new SparkConf().setAppName("Metron_" + sensorType)
@@ -76,6 +77,7 @@ object ParserApplication {
       ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG -> classOf[StringDeserializer],
       ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG -> classOf[StringSerializer]
     )
+    if (kerberos) kafkaParams += ("security.protocol" -> "SASL_PLAINTEXT")
     if (test) kafkaParams += (ConsumerConfig.AUTO_OFFSET_RESET_CONFIG -> "earliest")
     val messages = KafkaUtils.createDirectStream[String, String](
       ssc,
@@ -143,6 +145,7 @@ object ParserApplication {
             println("Errors: : " + result.getErrors)
           // Just discard errors
         }
+        producer.close()
         configurationsCache.close()
         client.close()
       }

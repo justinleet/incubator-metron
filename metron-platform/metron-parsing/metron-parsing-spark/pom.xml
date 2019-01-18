@@ -133,7 +133,6 @@
       <groupId>org.apache.metron</groupId>
       <artifactId>metron-integration-test</artifactId>
       <version>${project.parent.version}</version>
-      <!-- TODO properly test and handle dep -->
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -185,18 +184,15 @@
       <scope>test</scope>
     </dependency>
 
-    <!-- TODO Dig into why this is provided more. -->
     <dependency>
       <groupId>org.apache.curator</groupId>
       <artifactId>curator-client</artifactId>
       <version>${global_curator_version}</version>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.curator</groupId>
       <artifactId>curator-recipes</artifactId>
       <version>${global_curator_version}</version>
-      <scope>provided</scope>
     </dependency>
 
   </dependencies>
@@ -271,6 +267,10 @@
                 <relocation>
                   <pattern>com.fasterxml.jackson</pattern>
                   <shadedPattern>org.apache.metron.jackson</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>org.apache.curator</pattern>
+                  <shadedPattern>org.apache.metron.curator</shadedPattern>
                 </relocation>
               </relocations>
               <artifactSet>

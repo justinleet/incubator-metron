@@ -36,5 +36,39 @@ spark-submit \
   node1:2181 \
   node1:6667 \
   bro
+  kerberos
 ```
 
+Kerberos
+
+```
+spark-submit \
+  --master yarn \
+  --deploy-mode cluster \
+  --name bro_test \
+  --driver-memory 512m \
+  --executor-memory 512m \
+  --executor-cores 1 \
+  --num-executors 1 \
+  --proxy-user metron@EXAMPLE.COM \
+  --files ${METRON_HOME}client_jaas.conf#client_jaas.conf,/etc/security/keytabs/metron.headless.keytab#metron.headless.keytab \
+  --conf 'spark.driver.extraJavaOptions=-Djava.security.auth.login.config=client_jaas.conf' \
+  --conf "spark.executor.extraJavaOptions=-Djava.security.auth.login.config=./client_jaas.conf" \
+  --class org.apache.metron.parsers.ParserApplication \
+  /tmp/metron-parsing-spark-0.7.0-uber.jar \
+  node1:2181 \
+  node1:6667 \
+  bro
+```
+Need special consumer groups (sigh)
+
+As Kafka User
+export KERB_USER=metron
+for group in bro_parser snort_parser yaf_parser enrichments indexing-ra indexing-batch profiler; do
+	${KAFKA_HOME}/bin/kafka-acls.sh \
+      --authorizer kafka.security.auth.SimpleAclAuthorizer \
+      --authorizer-properties zookeeper.connect=${ZOOKEEPER} \
+      --add \
+      --allow-principal User:${KERB_USER} \
+      --group spark-executor-${group}
+done
