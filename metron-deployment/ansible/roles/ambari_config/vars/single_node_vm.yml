@@ -26,6 +26,7 @@ storm_slave: [SUPERVISOR]
 kafka_broker: [KAFKA_BROKER]
 zookeeper_master: [ZOOKEEPER_SERVER]
 zookeeper_slave: [ZOOKEEPER_CLIENT]
+kerberos_client: [KERBEROS_CLIENT]
 hbase_master: [HBASE_MASTER, HBASE_CLIENT]
 hbase_slave: [HBASE_REGIONSERVER]
 es_master: [ES_MASTER]
@@ -42,12 +43,21 @@ metron_alerts_ui: [METRON_ALERTS_UI]
 metron_components: >
   {{ hadoop_master | union(zookeeper_master) | union(storm_master) | union(hbase_master) | union(hadoop_slave) | union(zookeeper_slave) |
   union(storm_slave) | union(kafka_broker) | union(hbase_slave) | union(kibana_master) | union(metron_indexing) | union(metron_profiler) | union(metron_pcap) |
-  union(metron_enrichment_master) | union(metron_parsers) | union(metron_rest) | union(metron_management_ui) | union(metron_alerts_ui) | union(es_master)  }}
+  union(metron_enrichment_master) | union(metron_parsers) | union(metron_rest) | union(metron_management_ui) | union(metron_alerts_ui) | union(es_master) | union(kerberos_client) }}
 
 cluster_name: "metron_cluster"
 blueprint_name: "metron_blueprint"
 
 configurations:
+  - kerberos-env:
+      realm: "{{ krb_domain }}"
+      kdc_type: "{{ kdc_type }}"
+      kdc_hosts: "{{ kdc_host }}"
+      admin_server_host: "{{ kdc_host}}"
+  - krb5-conf:
+      domains: "{{ krb_domain }}"
+      manage_krb5_conf: false
+#      Figure out if this should be false
   - zoo.cfg:
       dataDir: '{{ zookeeper_data_dir }}'
   - hadoop-env:
@@ -138,6 +148,13 @@ blueprint:
   stack_name: HDP
   stack_version: "{{ hdp_stack }}"
   required_configurations: "{{ required_configurations }}"
+  credentials:
+    - alias: kdc.admin.credential
+      principal: admin/admin
+      key: admin
+      type: TEMPORARY
+  security:
+    type: KERBEROS
   groups:
     - name : host_group_1
       cardinality: 1

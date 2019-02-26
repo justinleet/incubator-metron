@@ -1,0 +1,66 @@
+#
+#  Licensed to the Apache Software Foundation (ASF) under one or more
+#  contributor license agreements.  See the NOTICE file distributed with
+#  this work for additional information regarding copyright ownership.
+#  The ASF licenses this file to You under the Apache License, Version 2.0
+#  (the "License"); you may not use this file except in compliance with
+#  the License.  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
+---
+# This role setups up an MIT KDC.  This is intended for testing/dev purposes. It absolutely should
+# not be used for production.
+
+- name: Install MIT KDC
+  yum: pkg={{item}} state=installed
+  with_items:
+    - krb5-server
+    - krb5-libs
+    - krb5-workstation
+    - rng-tools
+
+- name: Set current host as KDC
+  shell: sed -i.orig 's/kerberos.example.com/'"{{ kdc_host }}"'/g' /etc/krb5.conf
+
+- name: Copy KRB 5 conf
+  copy:
+    src: /etc/krb5.conf
+    dest: /var/lib/ambari-server/resources/scripts
+    remote_src: true
+    force: yes
+
+# Needed so that we aren't stuck waiting for entropy on the system. Again, don't use this for
+# production
+- name: Fixing KDC entropy
+  shell: rngd -r /dev/urandom
+  become: yes
+
+- name: Create KDC principal database
+  # TODO Don't hardcode the password
+  shell: kdb5_util create -s -P kdcpassword
+
+- name: Start KDC
+  shell: /etc/rc.d/init.d/krb5kdc start
+
+- name: Enable KDC service for automatic start
+  service:
+    name: krb5kdc
+    enabled: yes
+
+- name: Start Kerberos Admin service
+  shell: /etc/rc.d/init.d/kadmin start
+
+- name: Enable Kerberos Admin services for automatic start
+  service:
+    name: kadmin
+    enabled: yes
+
+- name: Setup Kerberos Admin principal
+  shell: kadmin.local -q "addprinc -pw admin admin/admin"
