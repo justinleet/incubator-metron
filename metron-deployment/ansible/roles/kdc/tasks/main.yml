@@ -18,6 +18,10 @@
 # This role setups up an MIT KDC.  This is intended for testing/dev purposes. It absolutely should
 # not be used for production.
 
+- name: Set Security Type
+  set_fact:
+    security_type: KERBEROS
+
 - name: Install MIT KDC
   yum: pkg={{item}} state=installed
   with_items:
