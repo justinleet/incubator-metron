@@ -263,13 +263,12 @@ def set_cluster_state(ambari_url, user, password, cluster_name, cluster_state):
 
 def create_cluster(ambari_url, user, password, cluster_name, blueprint_name, configurations, hosts_json, credentials):
     path = '/api/v1/clusters/{0}'.format(cluster_name)
-    data = json.dumps(
-        {
-            'blueprint': blueprint_name,
-            'configurations': configurations,
-            'host_groups': hosts_json,
-            'credentials': credentials
-        })
+    data = json.dumps({
+        'blueprint': blueprint_name,
+        'configurations': configurations,
+        'host_groups': hosts_json,
+        'credentials': credentials
+    })
     f = open('cluster.log', 'w')
     f.write(data)
     f.close()

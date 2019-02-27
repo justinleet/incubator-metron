@@ -56,7 +56,7 @@ configurations:
       admin_server_host: "{{ kdc_host}}"
   - krb5-conf:
       domains: "{{ krb_domain }}"
-      manage_krb5_conf: false
+      manage_krb5_conf: true
 #      Figure out if this should be false
   - zoo.cfg:
       dataDir: '{{ zookeeper_data_dir }}'
@@ -69,6 +69,9 @@ configurations:
       hbase_regionserver_heapsize: 512
       hbase_master_heapsize: 512
       hbase_regionserver_xmn_max: 512
+  - hbase-site:
+      hbase.coprocessor.master.classes: org.apache.hadoop.hbase.security.access.AccessController
+      hbase.coprocessor.region.classes: org.apache.hadoop.hbase.security.token.TokenProvider,org.apache.hadoop.hbase.security.access.AccessController
   - hdfs-site:
       dfs.replication: 1
       dfs.namenode.checkpoint.dir: '{{ namenode_checkpoint_dir  }}'

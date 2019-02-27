@@ -41,7 +41,7 @@
   become: true
   roles:
     - { role: ambari_master, tags: ["ambari-server", "hdp-install"] }
-    - { role: kdc, tags: ["kdc"] }
+    - { role: kdc, tags: ["never", "kerberos"] }
 #  tags:
 #    - ambari-server
 #    - hdp-install
