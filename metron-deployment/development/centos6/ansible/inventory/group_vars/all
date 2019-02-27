@@ -32,6 +32,7 @@ java_home: /usr/jdk64/jdk1.8.0_77
 kdc_host: "{{ ambari_host }}"
 kdc_type: mit-kdc
 krb_domain: EXAMPLE.COM
+security_type: KERBEROS
 
 # hbase
 pcap_hbase_table: pcap
