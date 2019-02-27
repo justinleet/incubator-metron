@@ -42,10 +42,6 @@
   roles:
     - { role: ambari_master, tags: ["ambari-server", "hdp-install"] }
     - { role: kdc, tags: ["never", "kerberos"] }
-#  tags:
-#    - ambari-server
-#    - hdp-install
-#    - kdc
 
 - hosts: ambari_slave
   become: true
