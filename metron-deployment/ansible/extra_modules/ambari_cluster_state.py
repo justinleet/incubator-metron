@@ -205,7 +205,7 @@ def main():
                 module.fail_json(msg="Must provide blueprint_var and blueprint_name when cluster_state=='present'")
 
             blueprint_var = p.get('blueprint_var')
-            blueprint, host_map = blueprint_var_to_ambari_converter(blueprint_var)
+            blueprint, host_map, credentials = blueprint_var_to_ambari_converter(blueprint_var)
             created_blueprint = False
 
             if not blueprint_exists(ambari_url, username, password, blueprint_name):
@@ -217,7 +217,7 @@ def main():
                                  created_blueprint=created_blueprint)
 
             configurations = p.get('configurations')
-            request = create_cluster(ambari_url, username, password, cluster_name, blueprint_name, configurations, host_map)
+            request = create_cluster(ambari_url, username, password, cluster_name, blueprint_name, configurations, host_map, credentials)
             request_id = json.loads(request.content)['Requests']['id']
             if wait_for_complete:
                 status = wait_for_request_complete(ambari_url, username, password, cluster_name, request_id, 2)
@@ -261,9 +261,15 @@ def set_cluster_state(ambari_url, user, password, cluster_name, cluster_state):
     return r
 
 
-def create_cluster(ambari_url, user, password, cluster_name, blueprint_name, configurations, hosts_json):
+def create_cluster(ambari_url, user, password, cluster_name, blueprint_name, configurations, hosts_json, credentials):
     path = '/api/v1/clusters/{0}'.format(cluster_name)
-    data = json.dumps({'blueprint': blueprint_name, 'configurations': configurations, 'host_groups': hosts_json})
+    data = json.dumps(
+        {
+            'blueprint': blueprint_name,
+            'configurations': configurations,
+            'host_groups': hosts_json,
+            'credentials': credentials
+        })
     f = open('cluster.log', 'w')
     f.write(data)
     f.close()
@@ -384,11 +390,16 @@ def blueprint_var_to_ambari_converter(blueprint_var):
         this_host_list = [{'fqdn': host} for host in hosts]
         this_host_map['hosts'] = this_host_list
         host_map.append(this_host_map)
+    credentials = blueprint_var['credentials']
     blueprint = dict()
     blueprint['configurations'] = blueprint_var['required_configurations']
     blueprint['host_groups'] = new_groups
-    blueprint['Blueprints'] = {'stack_name': blueprint_var['stack_name'], 'stack_version': blueprint_var['stack_version']}
-    return blueprint, host_map
+    blueprint['Blueprints'] = {
+        'stack_name': blueprint_var['stack_name'],
+        'stack_version': blueprint_var['stack_version'],
+        'security': blueprint_var['security']
+    }
+    return blueprint, host_map, credentials
 
 from ansible.module_utils.basic import *
 if __name__ == '__main__':
