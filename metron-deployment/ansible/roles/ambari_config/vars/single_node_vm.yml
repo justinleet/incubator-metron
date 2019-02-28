@@ -76,7 +76,6 @@ configurations:
   - krb5-conf:
       domains: "{{ krb_domain }}"
       manage_krb5_conf: true
-#      Figure out if this should be false
   - zoo.cfg:
       dataDir: '{{ zookeeper_data_dir }}'
   - hadoop-env:
@@ -89,6 +88,7 @@ configurations:
       hbase_master_heapsize: 512
       hbase_regionserver_xmn_max: 512
   - hbase-site:
+      # Needs to be set because Ambari won't do it, and HBase grants for metron user will fail.
       hbase.coprocessor.master.classes: org.apache.hadoop.hbase.security.access.AccessController
       hbase.coprocessor.region.classes: org.apache.hadoop.hbase.security.token.TokenProvider,org.apache.hadoop.hbase.security.access.AccessController
   - hdfs-site:
@@ -176,7 +176,7 @@ blueprint:
       key: admin
       type: TEMPORARY
   security:
-    type: {{ security_type }}
+    type: "{{ security_type }}"
   groups:
     - name : host_group_1
       cardinality: 1
