@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x
 #
 #  Licensed to the Apache Software Foundation (ASF) under one or more
 #  contributor license agreements.  See the NOTICE file distributed with
@@ -15,5 +16,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
+
+dev-utilities/build-utils/list_dependencies.sh
 
 dev-utilities/build-utils/list_dependencies.sh | python dev-utilities/build-utils/verify_license.py ./dependencies_with_url.csv

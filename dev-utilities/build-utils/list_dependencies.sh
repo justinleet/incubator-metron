@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -x
 #
 #  Licensed to the Apache Software Foundation (ASF) under one or more
 #  contributor license agreements.  See the NOTICE file distributed with
@@ -15,5 +16,9 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
+
+mvn dependency:list
+
+mvn dependency:list -PHDP-2.5.0.0
 
 { mvn dependency:list || { echo "ERROR:  Failed to run mvn dependency:list" ; exit 1 ; } ; mvn dependency:list -PHDP-2.5.0.0 || { echo "ERROR:  Failed to run mvn dependency:list -PHDP-2.5.0.0" ; exit 1 ; } ; } | grep "^\[INFO\]   " | awk '{print $2}' | grep -v "org.apache" | grep -v "test" | grep -v "provided" | grep -v "runtime" | grep -v ":system" |  sort | uniq
