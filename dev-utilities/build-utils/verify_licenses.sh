@@ -1,5 +1,4 @@
 #!/bin/bash
-set -x
 #
 #  Licensed to the Apache Software Foundation (ASF) under one or more
 #  contributor license agreements.  See the NOTICE file distributed with
@@ -20,8 +19,7 @@ set -x
 DEPS=$(dev-utilities/build-utils/list_dependencies.sh)
 rc=$?
 if [[ $rc != 0 ]]; then
-  echo "Failed to determine dependencies: "
-  echo "$DEPS"
+  echo "Failed to determine dependencies"
   exit $rc
 fi
 echo "$DEPS" | python dev-utilities/build-utils/verify_license.py ./dependencies_with_url.csv

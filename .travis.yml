@@ -60,11 +60,11 @@ matrix:
 
     - name: Verify Licenses
       script:
-        - ls -lah $HOME/.m2/repository/org/apache/
+        - time mvn install -T 2C -q -DskipTests=true -Dmaven.javadoc.skip=true -B -V -Dskip.npm
         - time ./dev-utilities/build-utils/verify_licenses.sh
 
 before_cache:
-  - rm -rf -v $HOME/.m2/repository/org/apache/metron
+  - rm -rf $HOME/.m2/repository/org/apache/metron
 
 cache:
   timeout: 1000
