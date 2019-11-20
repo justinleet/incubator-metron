@@ -17,6 +17,4 @@ set -x
 #  limitations under the License.
 #
 
-dev-utilities/build-utils/list_dependencies.sh
-
 dev-utilities/build-utils/list_dependencies.sh | python dev-utilities/build-utils/verify_license.py ./dependencies_with_url.csv
