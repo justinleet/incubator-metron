@@ -29,6 +29,7 @@ before_install:
   - export PATH=$M2_HOME/bin:$PATH
   - '[[ -d $M2_HOME ]] || curl --retry 10 -O https://archive.apache.org/dist/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.zip'
   - '[[ -d $M2_HOME ]] || unzip -qq apache-maven-3.3.9-bin.zip'
+  - mvn help:evaluate -Dexpression=settings.localRepository | grep -v '\[INFO\]'
   - ls ~/
   - ls $HOME
   - ls -lah ~/.m2/repository/org/apache/metron
