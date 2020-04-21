@@ -42,13 +42,13 @@ public enum GeoHashUtil {
   }
 
   public Optional<String> computeHash(Map<String, String> geoLoc, int precision) {
-    Optional<WGS84Point> point = GeoLiteCityDatabase.INSTANCE.toPoint(geoLoc);
-    if(point.isPresent()) {
-      return computeHash(point.get(), precision);
-    }
-    else {
+//    Optional<WGS84Point> point = GeoLiteCityDatabase.INSTANCE.toPoint(geoLoc);
+//    if(point.isPresent()) {
+//      return computeHash(point.get(), precision);
+//    }
+//    else {
       return Optional.empty();
-    }
+//    }
   }
 
   public Optional<WGS84Point> toPoint(String hash) {

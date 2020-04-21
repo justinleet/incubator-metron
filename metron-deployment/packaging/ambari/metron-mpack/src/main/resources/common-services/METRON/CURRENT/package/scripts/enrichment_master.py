@@ -73,8 +73,8 @@ class Enrichment(Script):
             commands.load_enrichment_coprocessor()
         if params.security_enabled and not commands.is_hbase_acl_configured():
             commands.set_hbase_acls()
-        if not commands.is_maxmind_configured():
-            commands.init_maxmind()
+        # if not commands.is_maxmind_configured():
+        #     commands.init_maxmind()
 
         commands.start_enrichment_topology(env)
 

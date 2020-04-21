@@ -93,40 +93,40 @@ class EnrichmentCommands:
         metron_service.set_configured(self.__params.metron_user, self.__params.enrichment_maxmind_configured_flag_file, "Setting Maxmind databases configured to True for enrichment")
 
     def init_maxmind(self):
-        Logger.info("Creating HDFS locations for MaxMind databases")
-        self.__params.HdfsResource(self.__params.geoip_hdfs_dir,
-                                   type="directory",
-                                   action="create_on_execute",
-                                   owner=self.__params.metron_user,
-                                   group=self.__params.metron_group,
-                                   mode=0755,
-                                   )
-
-        self.__params.HdfsResource(self.__params.asn_hdfs_dir,
-                                   type="directory",
-                                   action="create_on_execute",
-                                   owner=self.__params.metron_user,
-                                   group=self.__params.metron_group,
-                                   mode=0755,
-                                   )
-
-        Logger.info("Creating and loading Maxmind databases")
-        command_template = """{0}/bin/maxmind_enrichment_load.sh \
-                                -g {1} \
-                                -a {2} \
-                                -r {3} \
-                                -ra {4} \
-                                -z {5}"""
-        command = command_template.format(self.__params.metron_home,
-                                          self.__params.geoip_url,
-                                          self.__params.asn_url,
-                                          self.__params.geoip_hdfs_dir,
-                                          self.__params.asn_hdfs_dir,
-                                          self.__params.zookeeper_quorum
-                                          )
-        Logger.info("Executing command " + command)
-        Execute(command, user=self.__params.metron_user, tries=1, logoutput=True)
-        Logger.info("Done intializing Maxmind databases")
+        # Logger.info("Creating HDFS locations for MaxMind databases")
+        # self.__params.HdfsResource(self.__params.geoip_hdfs_dir,
+        #                            type="directory",
+        #                            action="create_on_execute",
+        #                            owner=self.__params.metron_user,
+        #                            group=self.__params.metron_group,
+        #                            mode=0755,
+        #                            )
+        #
+        # self.__params.HdfsResource(self.__params.asn_hdfs_dir,
+        #                            type="directory",
+        #                            action="create_on_execute",
+        #                            owner=self.__params.metron_user,
+        #                            group=self.__params.metron_group,
+        #                            mode=0755,
+        #                            )
+        #
+        # Logger.info("Creating and loading Maxmind databases")
+        # command_template = """{0}/bin/maxmind_enrichment_load.sh \
+        #                         -g {1} \
+        #                         -a {2} \
+        #                         -r {3} \
+        #                         -ra {4} \
+        #                         -z {5}"""
+        # command = command_template.format(self.__params.metron_home,
+        #                                   self.__params.geoip_url,
+        #                                   self.__params.asn_url,
+        #                                   self.__params.geoip_hdfs_dir,
+        #                                   self.__params.asn_hdfs_dir,
+        #                                   self.__params.zookeeper_quorum
+        #                                   )
+        # Logger.info("Executing command " + command)
+        # Execute(command, user=self.__params.metron_user, tries=1, logoutput=True)
+        # Logger.info("Done intializing Maxmind databases")
         self.set_maxmind_configured()
 
     def init_kafka_topics(self):

@@ -43,25 +43,25 @@ public class GeoAdapter implements EnrichmentAdapter<CacheKey>, Serializable {
   @Override
   public JSONObject enrich(CacheKey value) {
     JSONObject enriched = new JSONObject();
-    Optional<Map<String, String>> result = GeoLiteCityDatabase.INSTANCE.get(value.coerceValue(String.class));
-    if(!result.isPresent()) {
+//    Optional<Map<String, String>> result = GeoLiteCityDatabase.INSTANCE.get(value.coerceValue(String.class));
+//    if(!result.isPresent()) {
       return new JSONObject();
-    }
-
-    enriched = new JSONObject(result.get());
-    _LOG.trace("GEO Enrichment success: {}", enriched);
-    return enriched;
+//    }
+//
+//    enriched = new JSONObject(result.get());
+//    _LOG.trace("GEO Enrichment success: {}", enriched);
+//    return enriched;
   }
 
   @Override
   public boolean initializeAdapter(Map<String, Object> config) {
-    GeoLiteCityDatabase.INSTANCE.update((String)config.get(GeoLiteCityDatabase.GEO_HDFS_FILE));
+//    GeoLiteCityDatabase.INSTANCE.update((String)config.get(GeoLiteCityDatabase.GEO_HDFS_FILE));
     return true;
   }
 
   @Override
   public void updateAdapter(Map<String, Object> config) {
-    GeoLiteCityDatabase.INSTANCE.updateIfNecessary(config);
+//    GeoLiteCityDatabase.INSTANCE.updateIfNecessary(config);
   }
 
   @Override

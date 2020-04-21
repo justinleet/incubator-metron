@@ -227,9 +227,9 @@ def main():
             module.exit_json(changed=True, results=request.content,
                              created_blueprint=created_blueprint, status=request_status)
 
-    except requests.ConnectionError, e:
+    except requests.ConnectionError as e:
         module.fail_json(msg="Could not connect to Ambari client: " + str(e.message))
-    except Exception, e:
+    except Exception as e:
         module.fail_json(msg="Ambari client exception occurred: " + str(e.message))
 
 

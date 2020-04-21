@@ -358,10 +358,10 @@ public class UnifiedEnrichmentBolt extends ConfiguredEnrichmentBolt {
     messageGetter = this.getterStrategy.get(messageFieldName);
     enricher = new ParallelEnricher(enrichmentsByType, ConcurrencyContext.get(strategy), captureCacheStats);
     perfLog = new PerformanceLogger(() -> getConfigurations().getGlobalConfig(), Perf.class.getName());
-    GeoLiteCityDatabase.INSTANCE.update((String)getConfigurations().getGlobalConfig().get(
-        GeoLiteCityDatabase.GEO_HDFS_FILE));
-    GeoLiteAsnDatabase.INSTANCE.update((String)getConfigurations().getGlobalConfig().get(
-        GeoLiteAsnDatabase.ASN_HDFS_FILE));
+//    GeoLiteCityDatabase.INSTANCE.update((String)getConfigurations().getGlobalConfig().get(
+//        GeoLiteCityDatabase.GEO_HDFS_FILE));
+//    GeoLiteAsnDatabase.INSTANCE.update((String)getConfigurations().getGlobalConfig().get(
+//        GeoLiteAsnDatabase.ASN_HDFS_FILE));
     initializeStellar();
     enrichmentContext = new EnrichmentContext(StellarFunctions.FUNCTION_RESOLVER(), stellarContext);
   }

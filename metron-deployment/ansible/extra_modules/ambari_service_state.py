@@ -205,9 +205,9 @@ def main():
                 request = delete_service(ambari_url,username,password,cluster_name,service_name)
             module.exit_json(changed=True, results=request.content)
 
-    except requests.ConnectionError, e:
+    except requests.ConnectionError as e:
         module.fail_json(msg="Could not connect to Ambari client: " + str(e.message))
-    except Exception, e:
+    except Exception as e:
         module.fail_json(msg="Ambari client exception occurred: " + str(e.message))
 
 
